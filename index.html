@@ -106,8 +106,7 @@ input,select,button,textarea{font-family:inherit;color:inherit;}
   <div class="auth-box">
     <div class="auth-logo">KAMPANALYSE · NFF</div>
     <div class="auth-title">Logg inn</div>
-    <input id="pw-input" class="auth-input" type="password" placeholder="Passord"
-      onkeydown="if(event.key==='Enter')doPwLogin()"/>
+    <input id="pw-input" class="auth-input" type="password" placeholder="Passord"/>
     <button class="auth-btn" id="pw-btn">Logg inn →</button>
     <div class="auth-err" id="pw-err"></div>
   </div>
@@ -122,15 +121,25 @@ input,select,button,textarea{font-family:inherit;color:inherit;}
 <script>
 const SS_AUTH='kampanalyse_auth';
 function doPwLogin(){
-  const v=document.getElementById('pw-input').value.trim();
+  var v=document.getElementById('pw-input').value.trim();
   if(v===window.ACCESS_PASSWORD){
-    sessionStorage.setItem(SS_AUTH,'1');
+    try{sessionStorage.setItem(SS_AUTH,'1');}catch(e){}
     document.getElementById('screen-pw').style.display='none';
-  }else{document.getElementById('pw-err').textContent='Feil passord.';document.getElementById('pw-input').value='';}
+  }else{
+    document.getElementById('pw-err').textContent='Feil passord.';
+    document.getElementById('pw-input').value='';
+  }
 }
-document.getElementById('pw-btn').addEventListener('click', doPwLogin);
-document.getElementById('pw-input').addEventListener('keydown', function(e){if(e.key==='Enter')doPwLogin();});
-if(sessionStorage.getItem(SS_AUTH)==='1')document.getElementById('screen-pw').style.display='none';
+document.addEventListener('DOMContentLoaded',function(){
+  var btn=document.getElementById('pw-btn');
+  var inp=document.getElementById('pw-input');
+  if(btn)btn.addEventListener('click',doPwLogin);
+  if(inp)inp.addEventListener('keydown',function(e){if(e.key==='Enter')doPwLogin();});
+  try{
+    if(sessionStorage.getItem(SS_AUTH)==='1')
+      document.getElementById('screen-pw').style.display='none';
+  }catch(e){}
+});
 </script>
 
 <script type="text/babel" data-presets="react">
