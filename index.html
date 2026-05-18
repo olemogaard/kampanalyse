@@ -1033,20 +1033,11 @@ function PlayerModal({player,match,onClose}){
   const src=match.source;
   const phase=role[tab]||{desc:'',kpis:[]};
 
-  // Map player fields to kpi IDs
+  // Resolve a KPI id to its player field value
   const getVal=(id)=>{
-    const map={
-      passes:player.passes,long_passes:player.long_passes,
-      def_duels:player.def_duels,att_duels:player.att_duels,
-      interceptions:player.interceptions,recoveries:player.recoveries,
-      aerial_duels:player.aerial_duels,v1_defense:player.v1_defense,
-      dribbles:player.dribbles,shots:player.shots||player.shot,
-      clearances:player.clearances,saves:player.saves,
-      distributions:player.distributions,crosses:player.crosses,
-      xG:player.xG_player,xGChain:player.xGChain,
-      key_passes:player.key_passes,assists:player.assists,
-    };
-    const v=map[id]??null;
+    const direct=player[id]??null;
+    const alias={shots:'shot',shot:'shots'}[id];
+    const v=direct!==null?direct:(alias?player[alias]??null:null);
     return p90&&v!=null&&typeof v==='number'?per90(v,mins):v;
   };
 
@@ -1115,7 +1106,7 @@ function PlayerModal({player,match,onClose}){
           {tab!=='stats'&&kpis&&kpis.length>0&&(
             <div className="card" style={{marginBottom:12}}>
               {kpis.map((k,i)=>{
-                const raw=player[k.id]??player[{shots:'shot',shot:'shots'}[k.id]]??null;
+                const raw=getVal(k.id);
                 const val=p90&&raw!=null&&typeof raw==='number'?per90(raw,mins):raw;
                 const s=ev(raw,k.t,k.op);const ss=SS[s];
                 return(
@@ -1239,22 +1230,138 @@ function PlayerView({m}){
   const[posOv,setPosOv]=useState({});
   const[pf,setPf]=useState('all');
   const[sel,setSel]=useState(null);
+  const[showOpp,setShowOpp]=useState(false);
   const src=m.source;
-  const allP=[...m.players].sort((a,b)=>{
+
+  // Split by team
+  const sortP=arr=>[...arr].sort((a,b)=>{
     const aS=a.isStarter!==false?1:0;const bS=b.isStarter!==false?1:0;
     if(aS!==bS)return bS-aS;
     return(b.minutes_played||b.total||0)-(a.minutes_played||a.total||0);
   });
-  const filtered=allP.filter(p=>pf==='all'||(posOv[p.name]||p.pos)===pf);
+  const stabP=sortP(m.players.filter(p=>p.isStabek));
+  const oppP=sortP(m.players.filter(p=>!p.isStabek));
+  const filterPos=arr=>arr.filter(p=>pf==='all'||(posOv[p.name]||p.pos)===pf);
+
+  // All NFF kpis for a player (all phases combined, deduplicated)
+  function allKpis(pos){
+    const role=NFF_ROLES[pos]||NFF_ROLES.CM;
+    const seen=new Set();
+    return['angrep','forsvar','omstilling'].flatMap(ph=>(role[ph]?.kpis||[]).filter(k=>{
+      if(seen.has(k.id))return false;seen.add(k.id);return true;
+    }));
+  }
+
+  function kpiScore(p){
+    const kpis=allKpis(posOv[p.name]||p.pos);
+    let pass=0,total=0;
+    kpis.forEach(k=>{
+      const v=p[k.id]??p[k.id==='shots'?'shot':k.id==='shot'?'shots':null];
+      const s=ev(v,k.t,k.op);
+      if(s!=='na'){total++;if(s==='pass')pass++;}
+    });
+    return{pass,total};
+  }
+
+  function PlayerCard({p,isOpp}){
+    const pos=posOv[p.name]||p.pos;
+    const role=NFF_ROLES[pos]||NFF_ROLES.CM;
+    const kpis=allKpis(pos);
+    const{pass:kPass,total:kTot}=kpiScore(p);
+    const pC=kTot===0?C.border:kPass===kTot?C.green:kPass===0?C.red:C.amber;
+    const isSub=p.isStarter===false;
+
+    // Individual KPI rows - show all with ✓/✗
+    const kpiRows=kpis.map(k=>{
+      const v=p[k.id]??(k.id==='shots'?p.shot:k.id==='shot'?p.shots:null)??null;
+      const s=ev(v,k.t,k.op);const ss=SS[s];
+      return{k,v,s,ss};
+    }).filter(({v})=>v!==null);
+
+    return(
+      <div onClick={()=>setSel({...p,pos})}
+        style={{background:C.bg2,border:`1px solid ${C.border}`,
+          borderLeft:`3px solid ${isOpp?C.border2:role.color}`,
+          borderRadius:6,padding:'10px 12px',cursor:'pointer',
+          opacity:isOpp?0.75:1,transition:'border-color .15s'}}
+        onMouseEnter={e=>e.currentTarget.style.borderLeftColor=role.color}
+        onMouseLeave={e=>e.currentTarget.style.borderLeftColor=isOpp?C.border2:role.color}>
+
+        {/* Header */}
+        <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:7}}>
+          <div>
+            <div style={{fontSize:9,color:role.color,letterSpacing:'.12em',textTransform:'uppercase',marginBottom:1}}>
+              {role.label}
+              {isSub&&p.minutes_played&&<span style={{color:C.amber,marginLeft:4}}>↑{90-(p.minutes_played||0)}'</span>}
+              {!isSub&&p.minutes_played&&p.minutes_played<90&&<span style={{color:C.text3,marginLeft:4}}>→{p.minutes_played}'</span>}
+            </div>
+            <div style={{fontSize:13,fontWeight:700}}>{p.name}</div>
+            <div style={{fontSize:10,color:C.text3}}>⏱ {p.minutes_played||'?'} min</div>
+          </div>
+          <div style={{display:'flex',flexDirection:'column',alignItems:'flex-end',gap:3}}>
+            {kTot>0&&<span style={{background:pC+'18',border:`1px solid ${pC}44`,borderRadius:20,padding:'1px 8px',fontSize:10,fontWeight:700,color:pC}}>{kPass}/{kTot}</span>}
+            <select value={pos} onClick={e=>e.stopPropagation()}
+              onChange={e=>setPosOv(prev=>({...prev,[p.name]:e.target.value}))}
+              style={{background:C.border,border:'none',borderRadius:4,color:C.text,fontSize:9,fontFamily:'inherit',padding:'2px 4px',cursor:'pointer'}}>
+              {POS_ORDER.map(po=><option key={po} value={po}>{NFF_ROLES[po]?.label||po}</option>)}
+            </select>
+          </div>
+        </div>
+
+        {/* NFF KPI checklist */}
+        {kpiRows.length>0&&(
+          <div style={{borderTop:`1px solid ${C.border}`,paddingTop:6,marginBottom:7}}>
+            {kpiRows.map(({k,v,s,ss},i)=>(
+              <div key={k.id} style={{display:'flex',alignItems:'center',gap:5,
+                padding:'2px 0',borderBottom:i<kpiRows.length-1?`1px solid ${C.border}15`:'none'}}>
+                <span style={{fontSize:9,color:ss.c,fontWeight:800,width:10,flexShrink:0}}>{ss.sym}</span>
+                <span style={{flex:1,fontSize:10,color:s==='na'?C.text3:C.text}}>{k.label}</span>
+                <span style={{fontSize:9,color:C.text3,whiteSpace:'nowrap'}}>{opS[k.op]}{k.t}</span>
+                <span style={{fontSize:13,fontWeight:800,color:ss.c,minWidth:26,textAlign:'right'}}>{v}</span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Stat summary */}
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'2px 8px',fontSize:11}}>
+          {(src==='playerv2'||src==='player')&&[
+            ['Pasn.',p.passes,C.blue],['Def.',p.def_duels,C.red],
+            ['Off.',p.att_duels,C.green],['Gjenv.',p.recoveries,C.amber],
+          ].filter(([,v])=>v!=null).map(([l,v,col])=>(
+            <div key={l}><span style={{color:C.text3}}>{l} </span><span style={{fontWeight:700,color:col}}>{v}</span></div>
+          ))}
+          {src==='pdf'&&[
+            ['xGChain',p.xGChain,C.amber],['xG',p.xG_player,C.green],
+            ['Avslut.',p.shots||p.shot,C.red],['Nøkkelp.',p.key_passes,C.blue],
+          ].filter(([,v])=>v!=null).map(([l,v,col])=>(
+            <div key={l}><span style={{color:C.text3}}>{l} </span><span style={{fontWeight:700,color:col}}>{v}</span></div>
+          ))}
+          {(src==='team'||src==='teamv2')&&[
+            ['Sekvenser',p.total,C.blue],
+            ['Siste3.%',p.finalThirdP!=null?`${p.finalThirdP}%`:null,C.amber],
+            ['Avslut.',p.shot,C.red],
+            ['H.overg.',p.highTrans,C.purple],
+          ].filter(([,v])=>v!=null).map(([l,v,col])=>(
+            <div key={l}><span style={{color:C.text3}}>{l} </span><span style={{fontWeight:700,color:col}}>{v}</span></div>
+          ))}
+        </div>
+        <div style={{fontSize:9,color:C.text3,marginTop:4,textAlign:'right'}}>Klikk for full rapport →</div>
+      </div>
+    );
+  }
+
+  const stabFiltered=filterPos(stabP);
+  const oppFiltered=filterPos(oppP);
 
   return(
     <div>
       {sel&&<PlayerModal player={sel} match={m} onClose={()=>setSel(null)}/>}
+
       {/* Pos filter */}
-      <div style={{display:'flex',gap:5,marginBottom:10,flexWrap:'wrap'}}>
+      <div style={{display:'flex',gap:5,marginBottom:12,flexWrap:'wrap'}}>
         {['all',...POS_ORDER].map(p=>{
-          const role=NFF_ROLES[p];
-          const col=role?.color||C.text2;
+          const role=NFF_ROLES[p];const col=role?.color||C.text2;
           return(
             <button key={p} onClick={()=>setPf(p)} style={{
               background:pf===p?col+'18':'transparent',
@@ -1265,7 +1372,9 @@ function PlayerView({m}){
           );
         })}
       </div>
-      {allP.length===0&&(
+
+      {/* Empty state */}
+      {m.players.length===0&&(
         <div style={{background:C.bg3,border:`1px solid ${C.border}`,borderRadius:6,padding:'16px',marginTop:8}}>
           <div style={{fontSize:13,fontWeight:700,color:C.text,marginBottom:6}}>Ingen individuelle spillerdata</div>
           <div style={{fontSize:12,color:C.text2,lineHeight:1.7}}>
@@ -1274,7 +1383,7 @@ function PlayerView({m}){
           </div>
           <div style={{marginTop:10,display:'flex',flexDirection:'column',gap:4}}>
             {[
-              ['🟢','Sportscode Spiller-XML (UTF-16)','Fullt individuelt bilde — effektivitet, dueller, pasninger'],
+              ['🟢','Sportscode Spiller-XML','Effektivitet, dueller, pasninger, recoveries'],
               ['🟠','StatsBomb PDF','xG, xGChain, press, taklinger, touches i boks'],
               ['🟣','Wyscout PDF','xG, xA, PPDA, dueller, driblinger'],
             ].map(([icon,type,desc])=>(
@@ -1289,67 +1398,50 @@ function PlayerView({m}){
           </div>
         </div>
       )}
-      <div className="player-grid">
-        {filtered.map((p,idx)=>{
-          const pos=posOv[p.name]||p.pos;
-          const role=NFF_ROLES[pos]||NFF_ROLES.CM;
-          const phase_kpis=role.angrep?.kpis||[];
-          const kPass=phase_kpis.filter(k=>ev(p[k.id]??p[{shots:'shot',shot:'shots'}[k.id]],k.t,k.op)==='pass').length;
-          const kTot=phase_kpis.filter(k=>ev(p[k.id]??p[{shots:'shot',shot:'shots'}[k.id]],k.t,k.op)!=='na').length;
-          const pC=kTot===0?C.border:kPass===kTot?C.green:kPass===0?C.red:C.amber;
-          const isSub=p.isStarter===false;
-          const prevSub=idx>0&&filtered[idx-1]?.isStarter!==false&&isSub;
-          return(
-            <React.Fragment key={p.name}>
-              {prevSub&&<div style={{gridColumn:'1/-1'}} className="divider">↕ Innbyttere</div>}
-              <div className={`player-card ${isSub?'sub':'starter'}`}
-                style={{'--accent':role.color,opacity:p.isStabek?1:0.65}}
-                onClick={()=>setSel({...p,pos})}>
-                <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:6}}>
-                  <div>
-                    <div style={{fontSize:9,color:role.color,letterSpacing:'.12em',textTransform:'uppercase',marginBottom:1}}>
-                      {role.label}
-                      {!p.isStabek&&<span style={{color:C.text3,marginLeft:4,fontSize:8}}>OPP</span>}
-                      {isSub&&p.minutes_played&&<span style={{color:C.amber,marginLeft:4}}>↑{90-(p.minutes_played||0)}'</span>}
-                      {!isSub&&p.minutes_played&&p.minutes_played<90&&<span style={{color:C.text3,marginLeft:4}}>→{p.minutes_played}'</span>}
-                    </div>
-                    <div style={{fontSize:13,fontWeight:700}}>{p.name}</div>
-                    <div style={{fontSize:10,color:C.text3}}>⏱ {p.minutes_played||'?'} min</div>
-                  </div>
-                  <div style={{display:'flex',flexDirection:'column',alignItems:'flex-end',gap:3}}>
-                    {kTot>0&&<span className="pill" style={{background:pC+'18',color:pC,fontSize:10}}>{kPass}/{kTot}</span>}
-                    <select value={pos} onClick={e=>e.stopPropagation()}
-                      onChange={e=>setPosOv(prev=>({...prev,[p.name]:e.target.value}))}
-                      style={{background:C.border,border:'none',borderRadius:4,color:C.text,fontSize:9,fontFamily:'inherit',padding:'2px 4px',cursor:'pointer'}}>
-                      {POS_ORDER.map(po=><option key={po} value={po}>{NFF_ROLES[po]?.label||po}</option>)}
-                    </select>
-                  </div>
-                </div>
-                {/* Stats mini */}
-                <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'2px 8px',fontSize:11}}>
-                  {(()=>{
-                    const rows=src==='pdf'?[
-                      ['xGChain',p.xGChain,C.amber],['xG',p.xG_player,C.green],
-                      ['Avslut.',p.shots||p.shot,C.red],['Nøkkelp.',p.key_passes,C.blue],
-                    ]:src==='playerv2'||src==='player'?[
-                      ['Pasn.',p.passes,C.blue],['Def.duel',p.def_duels,C.red],
-                      ['Off.duel',p.att_duels,C.green],['Gjenv.',p.recoveries,C.amber],
-                      ['Drib.',p.dribbles,C.green],['Int.',p.interceptions,C.amber],
-                    ]:[
-                      ['Sekvenser',p.total,C.blue],['Siste3.%',p.finalThirdP!=null?`${p.finalThirdP}%`:null,C.amber],
-                      ['Avslut.',p.shot,C.red],['H.overg.',p.highTrans,C.purple],
-                    ];
-                    return rows.filter(([,v])=>v!=null).map(([l,v,col])=>(
-                      <div key={l}><span style={{color:C.text3}}>{l} </span><span style={{fontWeight:700,color:col}}>{v}</span></div>
-                    ));
-                  })()}
-                </div>
-                <div style={{fontSize:9,color:C.text3,marginTop:4,textAlign:'right'}}>Klikk for rapport →</div>
-              </div>
-            </React.Fragment>
-          );
-        })}
-      </div>
+
+      {/* Hjemmelag / ditt lag */}
+      {stabFiltered.length>0&&(
+        <div style={{marginBottom:20}}>
+          <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',
+            marginBottom:8,paddingBottom:6,borderBottom:`1.5px solid ${C.blue}44`}}>
+            <div>
+              <span style={{fontSize:11,fontWeight:700,color:C.blue,letterSpacing:'.08em',textTransform:'uppercase'}}>{m.stabTeam}</span>
+              <span style={{fontSize:10,color:C.text3,marginLeft:8}}>{stabFiltered.length} spillere</span>
+            </div>
+            {/* KPI summary for team */}
+            {(()=>{
+              let tp=0,tt=0;
+              stabFiltered.forEach(p=>{const{pass,total}=kpiScore(p);tp+=pass;tt+=total;});
+              const col=tt===0?C.text3:tp/tt>.6?C.green:tp/tt>.4?C.amber:C.red;
+              return tt>0?<span style={{fontSize:11,fontWeight:700,color:col}}>{tp}/{tt} krav møtt</span>:null;
+            })()}
+          </div>
+          <div className="player-grid">
+            {stabFiltered.map(p=><PlayerCard key={p.name} p={p} isOpp={false}/>)}
+          </div>
+        </div>
+      )}
+
+      {/* Motstander */}
+      {oppP.length>0&&(
+        <div>
+          <button onClick={()=>setShowOpp(o=>!o)}
+            style={{width:'100%',background:'transparent',border:`1px solid ${C.border}`,
+              borderRadius:6,padding:'7px 12px',cursor:'pointer',display:'flex',
+              justifyContent:'space-between',alignItems:'center',marginBottom:8,fontFamily:'inherit'}}>
+            <div>
+              <span style={{fontSize:11,fontWeight:700,color:C.text2,letterSpacing:'.08em',textTransform:'uppercase'}}>{m.oppTeam}</span>
+              <span style={{fontSize:10,color:C.text3,marginLeft:8}}>{oppFiltered.length} spillere</span>
+            </div>
+            <span style={{color:C.text3,fontSize:12}}>{showOpp?'▲':'▼'}</span>
+          </button>
+          {showOpp&&(
+            <div className="player-grid">
+              {oppFiltered.map(p=><PlayerCard key={p.name} p={p} isOpp={true}/>)}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
