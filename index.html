@@ -324,7 +324,7 @@ const NFF_ROLES={
 // ── Generic Collective KPIs ───────────────────────────────────────
 const ATTACK_KPIS=[
   {id:"dom",label:"Dominere kamper",items:[
-    {id:"possession",    label:"Possession %",        t:50,op:">",unit:"%",src:["pdf","team","player","teamv2"]},
+    {id:"possession",    label:"Possession %",        t:50,op:">",unit:"%",src:["pdf","team","player","playerv2","teamv2"]},
     {id:"pasningar",     label:"Pasninger totalt",    t:400,op:">",        src:["pdf"]},
     {id:"avslutninger",  label:"Avslutninger",        t:12,op:">",         src:["pdf","team","teamv2"]},
     {id:"passComp",      label:"Pasningsprosent %",   t:75,op:">",unit:"%",src:["pdf"]},
@@ -332,37 +332,37 @@ const ATTACK_KPIS=[
   ]},
   {id:"off",label:"Offensiv & angripende",items:[
     {id:"xG",            label:"xG",                 t:1.5,op:">=",       src:["pdf"]},
-    {id:"maal",          label:"Scorede mål",        t:2,  op:">=",       src:["pdf","team","teamv2","player"]},
-    {id:"highTransP",    label:"Høye overganger %",  t:8,  op:">",unit:"%",src:["team"]},
-    {id:"finalThirdP",   label:"Siste tredel %",     t:30, op:">",unit:"%",src:["team"]},
+    {id:"maal",          label:"Scorede mål",        t:2,  op:">=",       src:["pdf","team","teamv2","player","playerv2"]},
+    {id:"highTransP",    label:"Høye overganger %",  t:8,  op:">",unit:"%",src:["team","teamv2","playerv2"]},
+    {id:"finalThirdP",   label:"Siste tredel %",     t:30, op:">",unit:"%",src:["team","teamv2","playerv2"]},
     {id:"dribbSuksess",  label:"Suksess driblinger %",t:55,op:">",unit:"%",src:["pdf"]},
   ]},
   {id:"omstA",label:"Omstilling (angrep)",items:[
-    {id:"highTrans",     label:"Høye overganger",    t:5,  op:">=",       src:["team"]},
-    {id:"maalOffTrans",  label:"Mål off. overganger",t:1,  op:">",manual:true,src:["pdf","team","teamv2","player"]},
-    {id:"attacks",       label:"Angrepsaksjoner",    t:30, op:">=",       src:["team","teamv2"]},
+    {id:"highTrans",     label:"Høye overganger",    t:5,  op:">=",       src:["team","teamv2","playerv2"]},
+    {id:"maalOffTrans",  label:"Mål off. overganger",t:1,  op:">",manual:true,src:["pdf","team","teamv2","player","playerv2"]},
+    {id:"attacks",       label:"Angrepsaksjoner",    t:30, op:">=",       src:["team","teamv2","playerv2"]},
   ]},
   {id:"dodA",label:"Dødball (offensiv)",items:[
     {id:"dodPlusMinus",  label:"+/− dødball mål",   t:1,  op:">",        src:["pdf","teamv2"]},
-    {id:"egneKorner",    label:"Egne cornere",       t:3,  op:">=",       src:["team","teamv2"]},
+    {id:"egneKorner",    label:"Egne cornere",       t:3,  op:">=",       src:["team","teamv2","playerv2"]},
     {id:"shotFromSet",   label:"Skudd fra dødball",  t:2,  op:">",manual:true,src:["pdf","team","teamv2"]},
   ]},
 ];
 const DEFENSE_KPIS=[
   {id:"fors",label:"Forsvarsspill",items:[
-    {id:"oppShots",      label:"Avslutninger imot",  t:12, op:"<",        src:["pdf","team","teamv2","player"]},
+    {id:"oppShots",      label:"Avslutninger imot",  t:12, op:"<",        src:["pdf","team","teamv2","player","playerv2"]},
     {id:"xGa",           label:"xGa",                t:1.5,op:"<",        src:["pdf"]},
-    {id:"oppGoals",      label:"Innslupne mål",      t:1,  op:"<",        src:["pdf","team","teamv2","player"]},
+    {id:"oppGoals",      label:"Innslupne mål",      t:1,  op:"<",        src:["pdf","team","teamv2","player","playerv2"]},
     {id:"pressureRegains",label:"Press-gjenvinnelser",t:30,op:">=",       src:["pdf","teamv2"]},
-    {id:"ballerobrMotst",label:"Gjenvinnelser motstander halvdel",t:8,op:">=",src:["teamv2"]},
+    {id:"ballerobrMotst",label:"Gjenvinnelser motstander halvdel",t:8,op:">=",src:["team","teamv2","playerv2"]},
   ]},
   {id:"omstF",label:"Omstilling (forsvar)",items:[
-    {id:"maalDefTrans",  label:"Mål def. overganger",t:1,  op:"<",manual:true,src:["pdf","team","teamv2","player"]},
-    {id:"oppAttacks",    label:"Motstanderens angrep",t:40,op:"<",        src:["team","teamv2"]},
+    {id:"maalDefTrans",  label:"Mål def. overganger",t:1,  op:"<",manual:true,src:["pdf","team","teamv2","player","playerv2"]},
+    {id:"oppAttacks",    label:"Motstanderens angrep",t:40,op:"<",        src:["team","teamv2","playerv2"]},
   ]},
   {id:"dodF",label:"Dødball (defensiv)",items:[
-    {id:"oppCorners",    label:"Motst. cornere",     t:6,  op:"<",        src:["team","teamv2","player"]},
-    {id:"oppSetPieces",  label:"Motst. dødballer",   t:25, op:"<",        src:["team","teamv2"]},
+    {id:"oppCorners",    label:"Motst. cornere",     t:6,  op:"<",        src:["team","teamv2","player","playerv2"]},
+    {id:"oppSetPieces",  label:"Motst. dødballer",   t:25, op:"<",        src:["team","teamv2","playerv2"]},
     {id:"oppShots",      label:"Avslutninger imot",  t:12, op:"<",        src:["pdf","team","teamv2"]},
   ]},
 ];
