@@ -982,6 +982,1023 @@ function mkP(name,jersey,pos,mins,starter,passes,shots,att_duels,interc,def_duel
     pass_pct:null,final_third_passes:null,pressures:null,touches_in_box:null,
     finalThird:null,finalThirdP:null,highTrans:null};
 }
+const DEMOS=[
+  {
+    id:'d1',source:'playerv2',
+    stabTeam:'Mjøndalen',oppTeam:'Stabæk U19',
+    filename:'Mjøndalen vs Stabæk U19',
+    date:'2025-05-16',competition:'OBOS Nasjonal',
+    scoreFor:0,scoreAgainst:0,
+    possession:null,avslutninger:5,oppShots:null,maal:0,oppGoals:0,
+    highTrans:null,highTransP:null,finalThirdP:null,
+    egneKorner:null,oppCorners:null,oppSetPieces:null,
+    attacks:null,oppAttacks:null,pasningar:null,passComp:null,
+    xG:null,xGa:null,ppda:null,pressureRegains:null,
+    ballerobrMotst:null,dribbSuksess:null,
+    dodPlusMinus:null,shotFromSet:null,
+    maalOffTrans:'',maalDefTrans:'',
+    players:[
+      mkP('(87) L. Oy',87,'GK',90,true, 0,0,0,1,0,0,1,0,0,0,2,32,0,0),
+      mkP('(2) I. Vik',2,'CB',90,true, 37,0,2,3,2,2,3,4,0,1,0,0,8,0),
+      mkP('(4) T. Mrakovic',4,'CB',90,true, 40,0,0,4,6,5,3,3,0,2,0,0,4,0),
+      mkP('(6) J. Skau',6,'CM',90,true, 24,0,1,0,2,1,1,0,0,0,0,0,4,0),
+      mkP('(15) F. Kvam',15,'WB',90,true, 21,0,10,4,5,1,0,4,3,1,0,0,2,2),
+      mkP('(17) K. Bata',17,'WB',90,true, 14,0,0,2,3,2,1,3,1,2,0,0,2,1),
+      mkP('(26) S. Eriksen',26,'CM',90,true, 22,0,4,1,5,1,0,3,0,1,0,0,5,1),
+      mkP('(28) E. Sawaneh',28,'CM',90,true, 23,1,8,3,11,8,3,1,2,0,0,0,0,0),
+      mkP('(10) L. Elvestad Neto',10,'CAM',90,true, 35,0,4,1,10,4,1,3,1,1,0,0,6,0),
+      mkP('(11) J. Bruusgaard',11,'FW',75,true, 14,2,4,3,4,1,1,2,0,1,0,0,3,1),
+      mkP('(20) A. Conteh',20,'FW',45,true, 10,1,4,0,0,0,9,0,0,0,0,0,5,1),
+      mkP('(30) F. Holst-Larsen',30,'FW',45,false, 12,1,1,2,2,1,0,2,1,0,0,0,0,0),
+      mkP('(7) L. Reutersward',7,'FW',30,false, 10,0,3,1,1,0,0,0,5,1,0,0,0,0),
+      mkP('(18) N. Arsbog',18,'FW',20,false, 3,0,3,1,3,2,0,0,1,0,0,0,0,0),
+      mkP('(3) A. Molund',3,'CB',15,false, 3,0,0,2,0,0,1,0,0,0,0,0,1,0),
+    ]
+  },
+<!DOCTYPE html>
+<html lang="no">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Kampanalyse</title>
+<script>window.ACCESS_PASSWORD="analyse2026";</script>
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>
+  if(typeof pdfjsLib!=='undefined'){
+    pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  }
+</script>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;700&family=IBM+Plex+Sans:wght@300;400;500;700&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#0d1117;--bg2:#161b22;--bg3:#1c2128;
+  --border:#30363d;--border2:#484f58;
+  --text:#e6edf3;--text2:#8b949e;--text3:#6e7681;
+  --green:#3fb950;--green2:#238636;
+  --blue:#58a6ff;--blue2:#1f6feb;
+  --amber:#f0883e;--amber2:#9e6a03;
+  --red:#f85149;--red2:#da3633;
+  --purple:#bc8cff;
+  --radius:6px;
+}
+html,body,#root{height:100%;background:var(--bg);color:var(--text);font-family:'IBM Plex Sans',sans-serif;}
+::-webkit-scrollbar{width:5px;height:5px;}
+::-webkit-scrollbar-track{background:var(--bg);}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+input,select,button,textarea{font-family:inherit;color:inherit;}
+/* Auth overlay */
+.auth{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:var(--bg);}
+.auth-box{width:340px;border:1px solid var(--border);border-radius:12px;padding:32px;background:var(--bg2);}
+.auth-logo{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.18em;color:var(--text3);margin-bottom:6px;}
+.auth-title{font-size:20px;font-weight:700;margin-bottom:20px;}
+.auth-input{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:9px 12px;font-size:14px;color:var(--text);outline:none;}
+.auth-input:focus{border-color:var(--blue);}
+.auth-btn{width:100%;margin-top:12px;background:var(--blue2);border:1px solid var(--blue);border-radius:var(--radius);padding:9px;color:var(--blue);font-size:13px;font-weight:700;cursor:pointer;}
+.auth-btn:hover{background:#2563b0;}
+.auth-err{margin-top:6px;font-size:11px;color:var(--red);min-height:14px;}
+/* Key setup */
+.key-info{background:rgba(88,166,255,.07);border:1px solid rgba(88,166,255,.2);border-radius:var(--radius);padding:10px 12px;margin:12px 0;font-size:11px;color:var(--blue);line-height:1.7;}
+.key-info a{color:var(--blue);}
+.btn-secondary{background:transparent;border:1px solid var(--border);border-radius:var(--radius);padding:6px 12px;font-size:11px;font-weight:500;cursor:pointer;color:var(--text2);}
+.btn-secondary:hover{border-color:var(--border2);color:var(--text);}
+/* Layout */
+.header{background:var(--bg2);border-bottom:1px solid var(--border);padding:12px 20px 0;}
+.header-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;}
+.match-title{font-size:18px;font-weight:700;line-height:1.2;}
+.match-meta{display:flex;gap:10px;align-items:center;margin-top:4px;flex-wrap:wrap;}
+.score{font-size:24px;font-weight:700;}
+.badge{border-radius:20px;padding:2px 9px;font-size:10px;font-weight:700;letter-spacing:.04em;}
+.tabs{display:flex;gap:0;margin-top:12px;overflow-x:auto;}
+.tab{background:transparent;border:none;border-bottom:2.5px solid transparent;padding:7px 16px 9px;color:var(--text2);cursor:pointer;font-size:11px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;white-space:nowrap;font-family:inherit;}
+.tab.active{border-bottom-color:var(--blue);color:var(--blue);}
+.content{padding:16px 20px;overflow-y:auto;height:calc(100vh - 120px);}
+/* Cards */
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);}
+.card-header{padding:8px 12px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;}
+.card-label{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text2);}
+/* Pill scores */
+.pill{border-radius:20px;padding:2px 8px;font-size:10px;font-weight:700;}
+/* KPI row */
+.kpi-row{display:flex;align-items:center;gap:8px;padding:6px 12px;border-bottom:1px solid rgba(48,54,61,.5);}
+.kpi-dot{width:16px;height:16px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:800;}
+.kpi-label{flex:1;font-size:12px;}
+.kpi-target{font-size:9px;color:var(--text3);white-space:nowrap;}
+.kpi-val{font-size:16px;font-weight:800;min-width:36px;text-align:right;}
+/* Player cards */
+.player-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px;}
+.player-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:10px 12px;cursor:pointer;transition:border-color .15s;}
+.player-card:hover{border-color:var(--border2);}
+.player-card.starter{border-left:3px solid var(--blue);}
+.player-card.sub{border-left:3px solid var(--border2);opacity:.85;}
+/* Modal */
+.modal-bg{position:fixed;inset:0;z-index:500;background:rgba(13,17,23,.92);display:flex;align-items:center;justify-content:center;padding:16px;}
+.modal{background:var(--bg2);border:1px solid var(--border);border-radius:10px;width:100%;max-width:600px;max-height:88vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 24px 64px #00000080;}
+.modal-header{padding:14px 16px;border-bottom:1px solid var(--border);flex-shrink:0;background:var(--bg3);}
+.modal-body{overflow-y:auto;padding:16px;flex:1;}
+.modal-tabs{display:flex;border-bottom:1px solid var(--border);flex-shrink:0;}
+.modal-tab{background:transparent;border:none;border-bottom:2.5px solid transparent;padding:7px 14px 8px;color:var(--text2);cursor:pointer;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;white-space:nowrap;font-family:inherit;}
+.modal-tab.active{border-bottom-color:var(--green);color:var(--green);}
+/* Mono font */
+.mono{font-family:'IBM Plex Mono',monospace;}
+/* Upload area */
+.upload-zone{border:1.5px dashed var(--border);border-radius:var(--radius);padding:16px;text-align:center;font-size:12px;color:var(--text3);cursor:pointer;}
+.upload-zone:hover,.upload-zone.drag{border-color:var(--blue);color:var(--blue);}
+/* Section divider */
+.divider{font-size:9px;letter-spacing:.15em;text-transform:uppercase;color:var(--text3);margin:12px 0 6px;padding-top:8px;border-top:1px solid var(--border);}
+/* Progress bar */
+.bar-bg{height:3px;background:var(--border);border-radius:2px;overflow:hidden;margin-top:3px;}
+.bar-fill{height:100%;border-radius:2px;}
+/* Phase block */
+.phase-btn{width:100%;background:transparent;border:1px solid var(--border);border-radius:var(--radius);padding:8px 12px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;font-family:inherit;}
+.phase-btn:hover{background:var(--bg3);}
+</style>
+</head>
+<body>
+
+<div id="screen-pw" class="auth">
+  <div class="auth-box">
+    <div class="auth-logo">KAMPANALYSE · NFF</div>
+    <div class="auth-title">Logg inn</div>
+    <input id="pw-input" class="auth-input" type="password" placeholder="Passord"
+      onkeydown="if(event.key==='Enter')doPwLogin()"/>
+    <button class="auth-btn" onclick="doPwLogin()">Logg inn →</button>
+    <div class="auth-err" id="pw-err"></div>
+  </div>
+</div>
+
+<!-- PDF.js used instead of API -->
+
+<!-- Settings removed - no API needed -->
+
+<div id="root"></div>
+
+<script>
+const SS_AUTH='kampanalyse_auth';
+function doPwLogin(){
+  const v=document.getElementById('pw-input').value.trim();
+  if(v===window.ACCESS_PASSWORD){
+    sessionStorage.setItem(SS_AUTH,'1');
+    document.getElementById('screen-pw').style.display='none';
+  }else{document.getElementById('pw-err').textContent='Feil passord.';document.getElementById('pw-input').value='';}
+}
+if(sessionStorage.getItem(SS_AUTH)==='1')document.getElementById('screen-pw').style.display='none';
+</script>
+
+<script type="text/babel" data-presets="react">
+const{useState,useRef,useCallback,useEffect}=React;
+
+// ── Colours ───────────────────────────────────────────────────────
+const C={
+  bg:'#0d1117',bg2:'#161b22',bg3:'#1c2128',
+  border:'#30363d',border2:'#484f58',
+  text:'#e6edf3',text2:'#8b949e',text3:'#6e7681',
+  green:'#3fb950',green2:'#238636',
+  blue:'#58a6ff',blue2:'#1f6feb',
+  amber:'#f0883e',red:'#f85149',purple:'#bc8cff',
+};
+
+// ── NFF Rollekrav ─────────────────────────────────────────────────
+// Based on NFF "Nasjonal spillestil" and NFF Academy Certification framework
+const NFF_ROLES={
+  GK:{
+    label:"Keeper",color:C.amber,
+    angrep:{
+      desc:"Keeper skal starte angrepsspillet med trygge distribusjoner. Lese spillet tidlig og velge riktig pasningslinje. Aktiv i å bruke hendene (kast/utspark) for rask overgang.",
+      kpis:[
+        {id:"distributions",label:"Distribusjoner",t:20,op:">=",info:"Keeper aktivt i spillet"},
+        {id:"long_passes",   label:"Lange baller",  t:5, op:">=",info:"Kickstart angrep"},
+        {id:"passes",        label:"Pasninger",     t:15,op:">=",info:"Bygge nedenfra"},
+      ]
+    },
+    forsvar:{
+      desc:"Hindre mål gjennom god posisjonering og skuddstopping. Styre det defensive leddet. Uredd i 1v1 og ved høye baller.",
+      kpis:[
+        {id:"saves",          label:"Redninger",       t:0, op:">=",info:"Direkteredninger"},
+        {id:"interceptions",  label:"Klaringer/exits",  t:1, op:">=",info:"Kontroll på boks"},
+        {id:"aerial_duels",   label:"Luftdueller",     t:1, op:">=",info:"Kontroll på høye baller"},
+      ]
+    },
+    omstilling:{
+      desc:"Rask avgjørelse etter brudd — kast eller spark fremover for å utnytte ubalanse.",
+      kpis:[
+        {id:"distributions",label:"Distribusjoner",t:15,op:">=",info:"Raske utspark/-kast"},
+      ]
+    }
+  },
+  CB:{
+    label:"Stopper",color:C.blue,
+    angrep:{
+      desc:"Starte angrepsspillet ved å gå inn i spillet med ball. Smarte pasninger gjennom leddene. Bruke føringen til å trekke press og frigjøre medspillere. Drive opp i rom.",
+      kpis:[
+        {id:"passes",       label:"Pasninger",          t:25,op:">=",info:"Aktiv i oppbygging"},
+        {id:"long_passes",  label:"Lange baller",       t:3, op:">=",info:"Skifte spill/bakrom"},
+        {id:"att_duels",    label:"Offensive dueller",  t:2, op:">=",info:"Drive med ball"},
+      ]
+    },
+    forsvar:{
+      desc:"Vinne dueller i alle soner — bakke og luft. Lese spillet og bryte linjer. Lede lagets defensive struktur. Forsvare boks mot innlegg og gjennombrudd.",
+      kpis:[
+        {id:"def_duels",    label:"Def. dueller",    t:4, op:">=",info:"Vinne bakduellar"},
+        {id:"interceptions",label:"Interceptions",   t:3, op:">=",info:"Bryte pasningslinjer"},
+        {id:"clearances",   label:"Klaringer",       t:1, op:">=",info:"Rydde farligheter"},
+        {id:"aerial_duels", label:"Luftdueller",     t:2, op:">=",info:"Vinne luftdueller"},
+        {id:"recoveries",   label:"Ball-gjenvinnelser",t:3,op:">=",info:"Vinne 2.baller"},
+      ]
+    },
+    omstilling:{
+      desc:"Forsvarsberedskap ved balltap. Hindre kontring gjennom smart posisjonering. Hurtig omstilling til angrepsspill etter gjenvinning.",
+      kpis:[
+        {id:"recoveries",   label:"Ball-gjenvinnelser",t:3,op:">=",info:"Kontrer kontringa"},
+        {id:"def_duels",    label:"Def. dueller",    t:3, op:">=",info:"Stopp overgang"},
+      ]
+    }
+  },
+  WB:{
+    label:"Back",color:C.purple,
+    angrep:{
+      desc:"Støtte kanten med overlapping. Slå seg fri i 1v1. Levere presise innlegg fra sidekorridoren. Kombinere inn i boks. Skape bredde og dybde.",
+      kpis:[
+        {id:"passes",       label:"Pasninger",          t:15,op:">=",info:"Aktiv i kantspill"},
+        {id:"dribbles",     label:"Driblinger (1v1)",   t:2, op:">=",info:"Slå seg forbi"},
+        {id:"crosses",      label:"Innlegg",            t:1, op:">=",info:"Sette inn baller"},
+        {id:"att_duels",    label:"Offensive dueller",  t:4, op:">=",info:"Kombinere på kant"},
+      ]
+    },
+    forsvar:{
+      desc:"Vinne 1v1 på kant. Dekke bakrom bak seg. Støtte sentrale forsvarere. Høy defensiv intensitet.",
+      kpis:[
+        {id:"def_duels",    label:"Def. dueller",    t:4, op:">=",info:"1v1 på kant"},
+        {id:"v1_defense",   label:"1v1 forsvar",     t:2, op:">=",info:"Stoppe kantspillere"},
+        {id:"interceptions",label:"Interceptions",   t:1, op:">=",info:"Les spillet defensivt"},
+      ]
+    },
+    omstilling:{
+      desc:"Rask overgang mellom faser. Balanse mellom angrepsstøtte og forsvarsberedskap. Viktig kobling mellom ledd.",
+      kpis:[
+        {id:"recoveries",   label:"Ball-gjenvinnelser",t:1,op:">=",info:"Bidra i pressjaget"},
+        {id:"def_duels",    label:"Def. dueller",    t:2, op:">=",info:"Omstilling forsvar"},
+      ]
+    }
+  },
+  CM:{
+    label:"Sentral MF",color:C.blue,
+    angrep:{
+      desc:"Sirkulere ball raskt og presist. Forløse spillere i rom med 'magic pass'. Skape overtallssituasjoner. Høy trekk-for-trekk forståelse. Smarte pasninger mellom leddene.",
+      kpis:[
+        {id:"passes",       label:"Pasninger",          t:20,op:">=",info:"Koble lagdelene"},
+        {id:"long_passes",  label:"Lange baller",       t:3, op:">=",info:"Skifte spill"},
+        {id:"att_duels",    label:"Offensive dueller",  t:4, op:">=",info:"Beholde ball"},
+      ]
+    },
+    forsvar:{
+      desc:"Aktivt press. Vinne ball ved høyt og lavt press. Anker i gjenvinninger. Kompakt struktur mellom leddene.",
+      kpis:[
+        {id:"def_duels",    label:"Def. dueller",    t:4, op:">=",info:"Press og vinne ball"},
+        {id:"interceptions",label:"Interceptions",   t:2, op:">=",info:"Les spillet og bryt"},
+        {id:"recoveries",   label:"Ball-gjenvinnelser",t:3,op:">=",info:"2.baller og press"},
+        {id:"v1_defense",   label:"1v1 forsvar",     t:2, op:">=",info:"Vinne pressdueller"},
+      ]
+    },
+    omstilling:{
+      desc:"Rask omstilling — første pas fremover etter gjenvinning. Balanse mellom støtteposisjon og offensiv markering.",
+      kpis:[
+        {id:"recoveries",   label:"Ball-gjenvinnelser",t:3,op:">=",info:"Gjenvinn umiddelbart"},
+        {id:"def_duels",    label:"Def. dueller",    t:3, op:">=",info:"Press etter tap"},
+      ]
+    }
+  },
+  CAM:{
+    label:"Off. MF",color:C.green,
+    angrep:{
+      desc:"Skape sjanser mellom linjene. Driblinger fra halvrom. Kombinere seg inn i boks. Avslutte fra distanse og etter kombinasjoner. Lese rom og tidssette bevegelser.",
+      kpis:[
+        {id:"passes",       label:"Pasninger",          t:15,op:">=",info:"Koble og kombinere"},
+        {id:"att_duels",    label:"Offensive dueller",  t:5, op:">=",info:"Kombinere seg inn"},
+        {id:"dribbles",     label:"Driblinger (1v1)",   t:2, op:">=",info:"Dribble fra halvrom"},
+        {id:"shots",        label:"Avslutninger",       t:1, op:">=",info:"Trekke til avslutning"},
+      ]
+    },
+    forsvar:{
+      desc:"Lede presset fra front. Sette presshøyde og styre motstanderens oppbygging. Bidra i pressing-struktur.",
+      kpis:[
+        {id:"def_duels",    label:"Def. dueller",    t:3, op:">=",info:"Press fra front"},
+        {id:"recoveries",   label:"Ball-gjenvinnelser",t:2,op:">=",info:"Gegenpressing"},
+      ]
+    },
+    omstilling:{
+      desc:"Trigger raske overganger. Angripe bakrom umiddelbart. Første pasning fremover gjennom pressledd.",
+      kpis:[
+        {id:"att_duels",    label:"Offensive dueller",  t:3,op:">=",info:"Trigger overgang"},
+        {id:"dribbles",     label:"Driblinger",         t:1,op:">=",info:"Snu spillet"},
+      ]
+    }
+  },
+  FW:{
+    label:"Angriper",color:C.red,
+    angrep:{
+      desc:"Score mål. Angripe bakrom. Holde ball under press. Vende og sette opp medspillere. Trussel i alle avslutningssoner.",
+      kpis:[
+        {id:"shots",        label:"Avslutninger",       t:2, op:">=",info:"Avslutte og score"},
+        {id:"att_duels",    label:"Offensive dueller",  t:5, op:">=",info:"Holde ball, snu"},
+        {id:"aerial_duels", label:"Luftdueller",        t:3, op:">=",info:"Vinne luftballer"},
+        {id:"dribbles",     label:"Driblinger (1v1)",   t:1, op:">=",info:"Slå forsvarere"},
+      ]
+    },
+    forsvar:{
+      desc:"Lede lagets pressjag. Sette riktig presshøyde. Trigger presset ved å stenge pasningslinjer.",
+      kpis:[
+        {id:"def_duels",    label:"Def. dueller",    t:2, op:">=",info:"Pressing intensitet"},
+        {id:"recoveries",   label:"Ball-gjenvinnelser",t:1,op:">=",info:"Gegenpressing"},
+      ]
+    },
+    omstilling:{
+      desc:"Kontreringsmuligheter — sprint i bakrom. Beholde ball etter gjenvinning i angrep.",
+      kpis:[
+        {id:"att_duels",    label:"Offensive dueller",  t:3,op:">=",info:"Bakromstrussel"},
+        {id:"aerial_duels", label:"Luftdueller",        t:2,op:">=",info:"Vinn 2.baller"},
+      ]
+    }
+  },
+  SUB:{label:"Innbytter",color:C.text3,angrep:{desc:"",kpis:[]},forsvar:{desc:"",kpis:[]},omstilling:{desc:"",kpis:[]}},
+};
+
+// ── Generic Collective KPIs ───────────────────────────────────────
+const ATTACK_KPIS=[
+  {id:"dom",label:"Dominere kamper",items:[
+    {id:"possession",    label:"Possession %",        t:50,op:">",unit:"%",src:["pdf","team","player","teamv2"]},
+    {id:"pasningar",     label:"Pasninger totalt",    t:400,op:">",        src:["pdf"]},
+    {id:"avslutninger",  label:"Avslutninger",        t:12,op:">",         src:["pdf","team","teamv2"]},
+    {id:"passComp",      label:"Pasningsprosent %",   t:75,op:">",unit:"%",src:["pdf"]},
+    {id:"ppda",          label:"PPDA (press)",        t:10,op:"<",         src:["pdf","teamv2"]},
+  ]},
+  {id:"off",label:"Offensiv & angripende",items:[
+    {id:"xG",            label:"xG",                 t:1.5,op:">=",       src:["pdf"]},
+    {id:"maal",          label:"Scorede mål",        t:2,  op:">=",       src:["pdf","team","teamv2","player"]},
+    {id:"highTransP",    label:"Høye overganger %",  t:8,  op:">",unit:"%",src:["team"]},
+    {id:"finalThirdP",   label:"Siste tredel %",     t:30, op:">",unit:"%",src:["team"]},
+    {id:"dribbSuksess",  label:"Suksess driblinger %",t:55,op:">",unit:"%",src:["pdf"]},
+  ]},
+  {id:"omstA",label:"Omstilling (angrep)",items:[
+    {id:"highTrans",     label:"Høye overganger",    t:5,  op:">=",       src:["team"]},
+    {id:"maalOffTrans",  label:"Mål off. overganger",t:1,  op:">",manual:true,src:["pdf","team","teamv2","player"]},
+    {id:"attacks",       label:"Angrepsaksjoner",    t:30, op:">=",       src:["team","teamv2"]},
+  ]},
+  {id:"dodA",label:"Dødball (offensiv)",items:[
+    {id:"dodPlusMinus",  label:"+/− dødball mål",   t:1,  op:">",        src:["pdf","teamv2"]},
+    {id:"egneKorner",    label:"Egne cornere",       t:3,  op:">=",       src:["team","teamv2"]},
+    {id:"shotFromSet",   label:"Skudd fra dødball",  t:2,  op:">",manual:true,src:["pdf","team","teamv2"]},
+  ]},
+];
+const DEFENSE_KPIS=[
+  {id:"fors",label:"Forsvarsspill",items:[
+    {id:"oppShots",      label:"Avslutninger imot",  t:12, op:"<",        src:["pdf","team","teamv2","player"]},
+    {id:"xGa",           label:"xGa",                t:1.5,op:"<",        src:["pdf"]},
+    {id:"oppGoals",      label:"Innslupne mål",      t:1,  op:"<",        src:["pdf","team","teamv2","player"]},
+    {id:"pressureRegains",label:"Press-gjenvinnelser",t:30,op:">=",       src:["pdf","teamv2"]},
+    {id:"ballerobrMotst",label:"Gjenvinnelser motstander halvdel",t:8,op:">=",src:["teamv2"]},
+  ]},
+  {id:"omstF",label:"Omstilling (forsvar)",items:[
+    {id:"maalDefTrans",  label:"Mål def. overganger",t:1,  op:"<",manual:true,src:["pdf","team","teamv2","player"]},
+    {id:"oppAttacks",    label:"Motstanderens angrep",t:40,op:"<",        src:["team","teamv2"]},
+  ]},
+  {id:"dodF",label:"Dødball (defensiv)",items:[
+    {id:"oppCorners",    label:"Motst. cornere",     t:6,  op:"<",        src:["team","teamv2","player"]},
+    {id:"oppSetPieces",  label:"Motst. dødballer",   t:25, op:"<",        src:["team","teamv2"]},
+    {id:"oppShots",      label:"Avslutninger imot",  t:12, op:"<",        src:["pdf","team","teamv2"]},
+  ]},
+];
+const TEAM_KPIS=[...ATTACK_KPIS,...DEFENSE_KPIS];
+
+// ── Helpers ───────────────────────────────────────────────────────
+function ev(val,t,op){
+  if(val===null||val===undefined||val==='')return'na';
+  const v=+val,tg=+t;
+  if(op==='>')return v>tg?'pass':'fail';
+  if(op==='>=')return v>=tg?'pass':'fail';
+  if(op==='<')return v<tg?'pass':'fail';
+  return'na';
+}
+const SS={pass:{c:C.green,sym:'✓'},fail:{c:C.red,sym:'✗'},na:{c:C.text3,sym:'—'}};
+const opS={'>':'>','>=':'≥','<':'<','<=':'≤'};
+function per90(val,mins){
+  if(val==null||!mins||mins<1)return null;
+  return Math.round(val/mins*90*10)/10;
+}
+function SrcBadge({src,fmt}){
+  const map={
+    pdf:['StatsBomb PDF','#f0883e'],
+    team:['Team XML','#58a6ff'],
+    player:['Spiller XML','#3fb950'],
+    teamv2:['Team XML v2','#a78bfa'],
+    playerv2:['Spiller XML v2','#34d399'],
+  };
+  const[label,color]=src==='pdf'&&fmt==='wyscout'?['Wyscout PDF','#a78bfa']:(map[src]||['Ukjent','#8b949e']);
+  return<span style={{background:color+'18',border:`1px solid ${color}44`,borderRadius:20,padding:'1px 8px',fontSize:9,fontWeight:700,color}}>{label}</span>;
+}
+
+// ── XML Parsers ───────────────────────────────────────────────────
+
+// Format 1: UTF-8 Team XML (Ball in play, KFUM-style)
+function parseTeamXMLv1(xml,fn){
+  const doc=new DOMParser().parseFromString(xml,'text/xml');
+  const insts=Array.from(doc.querySelectorAll('instance'));
+  const code=i=>i.querySelector('code')?.textContent||'';
+  function labels(inst){const d={};inst.querySelectorAll('label').forEach(l=>{const g=l.querySelector('group')?.textContent;const t=l.querySelector('text')?.textContent;if(g&&t){if(!d[g])d[g]=[];d[g].push(t);}});return d;}
+  const bip=insts.filter(i=>code(i)==='Ball in play');
+  const total=bip.length;
+  // Detect team names from possessions
+  const teamCodes=insts.map(i=>code(i)).filter(c=>c.includes('Possessions'));
+  const teamNames=teamCodes.map(c=>c.replace(' - Possessions',''));
+  const uniqueTeams=[...new Set(teamNames)];
+  // Find stabæk side
+  const stab=uniqueTeams.find(t=>t.toLowerCase().includes('stab'))||uniqueTeams[0]||'Hjemmelag';
+  const opp=uniqueTeams.find(t=>t!==stab)||uniqueTeams[1]||'Bortelag';
+  const stabPoss=insts.filter(i=>code(i)===`${stab} - Possessions`).length;
+  const oppPoss=insts.filter(i=>code(i)===`${opp} - Possessions`).length;
+  const stabSh=insts.filter(i=>code(i)===`${stab} - Shots`||code(i)===`${stab} - Goals`).length;
+  const oppSh=insts.filter(i=>code(i)===`${opp} - Shots`||code(i)===`${opp} - Goals`).length;
+  const stabGo=insts.filter(i=>code(i)===`${stab} - Goals`).length;
+  const oppGo=insts.filter(i=>code(i)===`${opp} - Goals`).length;
+  const stabCo=insts.filter(i=>code(i)===`${stab} - Corners`).length;
+  const oppCo=insts.filter(i=>code(i)===`${opp} - Corners`).length;
+  const stabSP=insts.filter(i=>code(i)===`${stab} - Set Pieces`).length;
+  const oppSP=insts.filter(i=>code(i)===`${opp} - Set Pieces`).length;
+  const stabA=insts.filter(i=>code(i)===`${stab} - Open play attacks`).length;
+  const oppA=insts.filter(i=>code(i)===`${opp} - Open play attacks`).length;
+  let ht=0,ft=0;const pd={};
+  bip.forEach(inst=>{
+    const l=labels(inst);
+    const eT=l['03 - End location third']||[];
+    const tr=l['08 - Transition']||[];
+    const ou=l['07 - Outcome']||[];
+    const pl=l['10 - Players']||[];
+    if(tr.includes('High'))ht++;
+    if(eT.includes('Final third'))ft++;
+    pl.forEach(p=>{
+      if(!pd[p])pd[p]={total:0,finalThird:0,highTrans:0,shot:0};
+      pd[p].total++;
+      if(eT.includes('Final third'))pd[p].finalThird++;
+      if(tr.includes('High'))pd[p].highTrans++;
+      if(ou.some(o=>['Shot','Shot on goal','Goal'].includes(o)))pd[p].shot++;
+    });
+  });
+  const sm=fn.match(/(\d+)-(\d+)/),dm=fn.match(/\d{4}-\d{2}-\d{2}/);
+  const sF=sm?parseInt(sm[2]):stabGo;const sA=sm?parseInt(sm[1]):oppGo;
+  const players=Object.entries(pd).map(([name,s])=>{
+    const jm=name.match(/^(\d+)\./);const j=jm?parseInt(jm[1]):0;
+    return{name,jersey:j,isStabek:j>0,pos:'CM',passes:s.total,total:s.total,
+      finalThird:s.finalThird,finalThirdP:s.total?Math.round(s.finalThird/s.total*100):0,
+      highTrans:s.highTrans,shot:s.shot,shots:s.shot,
+      def_duels:null,att_duels:null,interceptions:null,recoveries:null,
+      aerial_duels:null,v1_defense:null,dribbles:null,clearances:null,
+      saves:null,distributions:null,long_passes:null,crosses:null};
+  });
+  return{id:Date.now()+'',source:'team',stabTeam:stab,oppTeam:opp,
+    filename:`${stab} vs ${opp}`,date:dm?dm[0]:'?',competition:'',
+    scoreFor:sF,scoreAgainst:sA,
+    possession:total?Math.round(stabPoss/(stabPoss+oppPoss)*100):0,
+    avslutninger:stabSh,oppShots:oppSh,maal:sF,oppGoals:sA,
+    highTrans:ht,highTransP:total?Math.round(ht/total*100):0,
+    finalThirdP:total?Math.round(ft/total*100):0,
+    egneKorner:stabCo,oppCorners:oppCo,oppSetPieces:oppSP,
+    attacks:stabA,oppAttacks:oppA,
+    pasningar:null,passComp:null,xG:null,xGa:null,ppda:null,
+    pressureRegains:null,ballerobrMotst:null,dribbSuksess:null,
+    dodPlusMinus:null,shotFromSet:null,
+    maalOffTrans:'',maalDefTrans:'',
+    players};
+}
+
+// Format 2: UTF-16 Team XML (new Stabæk coding: "Defending style of play" etc.)
+function parseTeamXMLv2(xml,fn){
+  const doc=new DOMParser().parseFromString(xml,'text/xml');
+  const insts=Array.from(doc.querySelectorAll('instance'));
+  const code=i=>i.querySelector('code')?.textContent||'';
+  const n=c=>insts.filter(i=>code(i)===c).length;
+  const dm=fn.match(/\d{4}-\d{2}-\d{2}/);
+  const sm=fn.match(/(\d+)-(\d+)/);
+  const teamLabel=insts.find(i=>{const l=i.querySelector('label text');return l&&l.textContent;});
+  const teamName=teamLabel?.querySelector('label text')?.textContent||'Hjemmelag';
+  const stabTeam=fn.toLowerCase().includes('stabæk')||fn.toLowerCase().includes('stabek')?'Stabæk':teamName;
+  // Extract metrics
+  const attacks=n('Attacking style of play')+n('Goal scoring opportunities');
+  const shots=n('Shots')+n('Attacking direct free kicks');
+  const corners=n('Attacking corners');
+  const oppShots=n('Shots conceded')+n('Goal scoring opportunities conceded');
+  const oppGoals=n('Goals conceded');
+  const oppCorners=n('Corners conceded');
+  const oppSP=n('Other free kicks conceded')+n('Crosses conceded')+n('Corners conceded')+n('Free kicks conceded');
+  const pressureRegains=n('Recovery')||null;
+  const ballerobrMotst=n('Attacking style of play')||null;
+  const ppda=null; // not directly available
+  const sF=sm?parseInt(sm[2]):shots;
+  const sA=sm?parseInt(sm[1]):oppGoals;
+  return{id:Date.now()+'',source:'teamv2',stabTeam,oppTeam:'Motstander',
+    filename:`${stabTeam} vs Motstander`,date:dm?dm[0]:'?',competition:'',
+    scoreFor:sF,scoreAgainst:sA,
+    possession:null,avslutninger:shots,oppShots,maal:sF,oppGoals,
+    highTrans:null,highTransP:null,finalThirdP:null,
+    egneKorner:corners,oppCorners,oppSetPieces:oppSP,
+    attacks,oppAttacks:null,
+    pasningar:null,passComp:null,xG:null,xGa:null,ppda,
+    pressureRegains,ballerobrMotst,dribbSuksess:null,
+    dodPlusMinus:null,shotFromSet:null,
+    maalOffTrans:'',maalDefTrans:'',
+    players:[]};
+}
+
+// Format 3: UTF-16 Player XML (new: codes "(N) Surname", labels in empty group)
+function parsePlayerXMLv2(xml,fn){
+  const doc=new DOMParser().parseFromString(xml,'text/xml');
+  const insts=Array.from(doc.querySelectorAll('instance'));
+  const pd={};
+  insts.forEach(inst=>{
+    const code=inst.querySelector('code')?.textContent||'';
+    if(!code.match(/^\(\d+\)/))return;
+    const types=[...inst.querySelectorAll('label text')].map(t=>t.textContent).filter(Boolean);
+    if(!pd[code])pd[code]={passes:0,long_passes:0,def_duels:0,att_duels:0,interceptions:0,
+      recoveries:0,aerial_duels:0,v1_defense:0,dribbles:0,shots:0,clearances:0,
+      crosses:0,saves:0,distributions:0,fouls:0,aggressiveness:0,
+      loose_ball:0,throw_ins:0};
+    types.forEach(t=>{
+      const s=pd[code];
+      if(t==='Passes')s.passes++;
+      else if(t==='Long-range passes')s.long_passes++;
+      else if(t==='Defending duels')s.def_duels++;
+      else if(t==='Attacking duels')s.att_duels++;
+      else if(t==='Interceptions')s.interceptions++;
+      else if(t==='Recovery')s.recoveries++;
+      else if(t==='Aerial duels')s.aerial_duels++;
+      else if(t==='1 vs 1 Defense')s.v1_defense++;
+      else if(t==='1VS1 and dribbling')s.dribbles++;
+      else if(t==='Shots'||t==='Shot off target'||t==='Free kick shot')s.shots++;
+      else if(t==='Clearances')s.clearances++;
+      else if(t==='Cross'||t==='Free kick cross')s.crosses++;
+      else if(t==='Saves'||t==='Reflexes')s.saves++;
+      else if(t==='Distributions'||t==='Goal_kick')s.distributions++;
+      else if(t==='Fouls'||t==='Aggressiveness')s.fouls++;
+      else if(t==='Loose ball duel')s.loose_ball++;
+    });
+  });
+  const dm=fn.match(/\d{4}-\d{2}-\d{2}/);
+  const sm=fn.match(/(\d+)-(\d+)/);
+  const stabTeam=fn.toLowerCase().includes('stabæk')||fn.toLowerCase().includes('stabek')?'Stabæk':'Hjemmelag';
+  const oppTeam=fn.replace(/.*stab[æe]k[-_]/i,'').replace(/\.xml$/i,'').replace(/[-_]\d{4}.*$/,'').replace(/_/g,' ').trim()||'Motstander';
+  // Estimate possession from ball work
+  const allPasses=Object.values(pd).reduce((s,p)=>s+p.passes,0);
+  const players=Object.entries(pd).map(([name,s])=>{
+    const jm=name.match(/^\((\d+)\)/);const j=jm?parseInt(jm[1]):0;
+    const total=Object.values(s).reduce((a,b)=>a+b,0);
+    return{name,jersey:j,isStabek:true,pos:DEFAULT_POS[j]||'CM',
+      minutes_played:null,isStarter:total>20,...s,total,shot:s.shots};
+  });
+  // Sort by total actions
+  players.sort((a,b)=>(b.total||0)-(a.total||0));
+  const sF=sm?parseInt(sm[2]):0;const sA=sm?parseInt(sm[1]):0;
+  return{id:Date.now()+'',source:'playerv2',stabTeam,oppTeam,
+    filename:`${stabTeam} vs ${oppTeam}`,date:dm?dm[0]:'?',competition:'',
+    scoreFor:sF,scoreAgainst:sA,
+    possession:null,avslutninger:Object.values(pd).reduce((s,p)=>s+p.shots,0)||null,
+    oppShots:null,maal:sF,oppGoals:sA,
+    highTrans:null,highTransP:null,finalThirdP:null,
+    egneKorner:null,oppCorners:null,oppSetPieces:null,attacks:null,oppAttacks:null,
+    pasningar:null,passComp:null,xG:null,xGa:null,ppda:null,
+    pressureRegains:null,ballerobrMotst:null,dribbSuksess:null,
+    dodPlusMinus:null,shotFromSet:null,
+    maalOffTrans:'',maalDefTrans:'',
+    players};
+}
+
+// Format 4: UTF-8 Player XML (N. Surname, "1 - Type" group labels)
+function parsePlayerXMLv3(xml,fn){
+  const doc=new DOMParser().parseFromString(xml,'text/xml');
+  const insts=Array.from(doc.querySelectorAll('instance'));
+  const pd={};
+  insts.forEach(inst=>{
+    const code=inst.querySelector('code')?.textContent||'';
+    if(!code.match(/^\d+\./))return;
+    const types=[...inst.querySelectorAll('label')].filter(l=>l.querySelector('group')?.textContent==='1 - Type').map(l=>l.querySelector('text')?.textContent||'');
+    if(!pd[code])pd[code]={passes:0,long_passes:0,def_duels:0,att_duels:0,interceptions:0,
+      recoveries:0,aerial_duels:0,v1_defense:0,dribbles:0,shots:0,clearances:0,
+      crosses:0,saves:0,distributions:0,loose_ball:0};
+    types.forEach(t=>{
+      const s=pd[code];
+      if(t.includes('Pass')&&!t.includes('Long'))s.passes++;
+      else if(t.includes('Long pass'))s.long_passes++;
+      else if(t==='Defensive duel')s.def_duels++;
+      else if(t==='Offensive duel')s.att_duels++;
+      else if(t==='Interception'||t==='Counterpressing recovery')s.interceptions++;
+      else if(t==='Recovery')s.recoveries++;
+      else if(t==='Aerial duel')s.aerial_duels++;
+      else if(t.includes('dribbl'))s.dribbles++;
+      else if(t.includes('Shot')||t.includes('Goal'))s.shots++;
+      else if(t==='Clearance')s.clearances++;
+      else if(t.includes('Cross'))s.crosses++;
+      else if(t==='Goalkeeper action')s.saves++;
+      else if(t==='Loose ball duel')s.loose_ball++;
+    });
+  });
+  const dm=fn.match(/\d{4}-\d{2}-\d{2}/);
+  const sm=fn.match(/(\d+)-(\d+)/);
+  const nameMatch=fn.match(/^([A-Za-zæøåÆØÅ]+)_-_([A-Za-zæøåÆØÅ]+)/);
+  const home=nameMatch?nameMatch[1].replace(/_/g,' '):'Hjemmelag';
+  const away=nameMatch?nameMatch[2].replace(/_/g,' '):'Bortelag';
+  const stabTeam=fn.toLowerCase().includes('stab')?'Stabæk':home;
+  const sF=sm?parseInt(sm[1]):0;const sA=sm?parseInt(sm[2]):0;
+  const players=Object.entries(pd).map(([name,s])=>{
+    const jm=name.match(/^(\d+)\./);const j=jm?parseInt(jm[1]):0;
+    const total=Object.values(s).reduce((a,b)=>a+b,0);
+    return{name,jersey:j,isStabek:false,pos:DEFAULT_POS[j]||'CM',
+      minutes_played:null,isStarter:total>30,...s,total,shot:s.shots};
+  });
+  players.sort((a,b)=>(b.total||0)-(a.total||0));
+  return{id:Date.now()+'',source:'playerv2',stabTeam,oppTeam:away,
+    filename:`${stabTeam} vs ${away}`,date:dm?dm[0]:'?',competition:'',
+    scoreFor:sF,scoreAgainst:sA,
+    possession:null,avslutninger:null,oppShots:null,maal:sF,oppGoals:sA,
+    highTrans:null,highTransP:null,finalThirdP:null,
+    egneKorner:null,oppCorners:null,oppSetPieces:null,attacks:null,oppAttacks:null,
+    pasningar:null,passComp:null,xG:null,xGa:null,ppda:null,
+    pressureRegains:null,ballerobrMotst:null,dribbSuksess:null,
+    dodPlusMinus:null,shotFromSet:null,
+    maalOffTrans:'',maalDefTrans:'',
+    players};
+}
+
+// ── PDF Parser (Gemini) ───────────────────────────────────────────
+
+// ── PDF Parser (PDF.js, no API needed) ───────────────────────────
+
+async function extractPDFText(file){
+  if(typeof pdfjsLib==='undefined')throw new Error('PDF.js ikke lastet');
+  const buf=await file.arrayBuffer();
+  const pdf=await pdfjsLib.getDocument({data:buf}).promise;
+  const pages=[];
+  for(let i=1;i<=pdf.numPages;i++){
+    const page=await pdf.getPage(i);
+    const tc=await page.getTextContent();
+    const pageText=tc.items.map(it=>it.str).join(' ');
+    pages.push(pageText);
+  }
+  return pages;
+}
+
+function detectPDFFormat(pages){
+  const allText=pages.join(' ');
+  if(allText.includes('hudlstatsbomb')||allText.includes('StatsBomb')||allText.includes('xGChain')||allText.includes('Pressure Regains'))return'statsbomb';
+  if(allText.includes('hudlwyscout')||allText.includes('Wyscout')||allText.includes('PPDA')||allText.includes('Shot assists'))return'wyscout';
+  return'unknown';
+}
+
+function parseStatsBombPDF(pages, filename){
+  const all=pages.join('\n');
+
+  // ── Match result ──────────────────────────────────────────────
+  // Find "TEAM1 vs TEAM2" or "TEAM1 V TEAM2"
+  const vsM=all.match(/([A-ZÆØÅ][A-Za-zæøåÆØÅ\s]+?)\s+(?:vs?\.?|V)\s+([A-ZÆØÅ][A-Za-zæøåÆØÅ\s]+?)\s*\n/);
+  const homeTeam=(vsM?vsM[1]:'').trim();
+  const awayTeam=(vsM?vsM[2]:'').trim();
+  const hIS=homeTeam.toLowerCase().includes('stab');
+  const stabTeam=hIS?homeTeam:awayTeam;
+  const oppTeam=hIS?awayTeam:homeTeam;
+
+  // Score from race chart or match stats
+  const scoreM=all.match(/(\d+)\s*[–\-]\s*(\d+)/);
+  const homeScore=scoreM?parseInt(scoreM[1]):0;
+  const awayScore=scoreM?parseInt(scoreM[2]):0;
+  const sF=hIS?homeScore:awayScore;
+  const sA=hIS?awayScore:homeScore;
+
+  // Date
+  const dateM=all.match(/(\d{4}-\d{2}-\d{2})/);
+
+  // ── Team stats ────────────────────────────────────────────────
+  const goalsM=all.match(/(\d+)\s+Goals\s+(\d+)/);
+  const xgM=all.match(/([\d.]+)\s+xG\s+([\d.]+)/);
+  const shotsM=all.match(/(\d+)\s+Shots\s+(\d+)/);
+  const possM=all.match(/(\d+)\s+Possession\s+%\s+(\d+)/);
+  const passM=all.match(/(\d+)\s+\(\d+\)\s+Total\s+Passes\s+\(Completed\)\s+(\d+)\s+\((\d+)\)/);
+  const pressM=all.match(/(\d+)\s+Pressures\s+(\d+)/);
+  const pregM=all.match(/(\d+)\s+Pressure\s+Regains\s+(\d+)/);
+  const passCompM=all.match(/(\d+)\s+Pass\s+Completion\s+%\s+(\d+)/);
+
+  function pick(m,hi,ai){if(!m)return null;return hIS?parseInt(m[hi]):parseInt(m[ai]);}
+  function pickF(m,hi,ai){if(!m)return null;return hIS?parseFloat(m[hi]):parseFloat(m[ai]);}
+
+  const stabXG=pickF(xgM,1,2);const oppXG=pickF(xgM,2,1);
+  const stabShots=pick(shotsM,1,2);const oppShots=pick(shotsM,2,1);
+  const stabPoss=pick(possM,1,2);
+  const stabPasses=hIS?(passM?parseInt(passM[1]):null):(passM?parseInt(passM[2]):null);
+  const stabPassAcc=hIS?(passM?parseInt(passM[2]):null):(passM?parseInt(passM[3]):null);
+  const stabPassComp=pick(passCompM,1,2);
+  const stabPressures=pick(pressM,1,2);
+  const stabPressureReg=pick(pregM,1,2);
+
+  // ── Players ───────────────────────────────────────────────────
+  // Find the appendix section - look for "APPENDIX" or "Shots and Key-Passes"
+  const appendixIdx=all.indexOf('Shots and Key');
+  const xgchainIdx=all.indexOf('xG Chain\n')||all.indexOf('xGChain\n');
+  const passingIdx=all.indexOf('Passing and Touches');
+  const defIdx=all.indexOf('Defensive Actions');
+
+  const playerData={};
+
+  // Parse xGChain table - most reliable source
+  // Format: "Name 2.31 2.31 1.59 1.59" (xGChain OP_xGChain xGBuildup OP_xGBuildup)
+  const xgcSection=all.substring(Math.max(0,appendixIdx)).split('xG Chain')[1]||'';
+  const xgcLines=xgcSection.split('\n').slice(0,40);
+  for(const line of xgcLines){
+    const m=line.match(/^([A-ZÆØÅ][A-Za-zæøåÆØÅ\-\s]+?)\s+([\d.]+)\s+([\d.]+)\s+([\d.]+)\s+([\d.]+)\s*$/);
+    if(m){
+      const name=m[1].trim();
+      if(!playerData[name])playerData[name]={name};
+      playerData[name].xGChain=parseFloat(m[2]);
+      playerData[name].xG_buildup=parseFloat(m[4]);
+    }
+  }
+
+  // Parse shots/KP table
+  // Format: "Name shots goals xG xG/shot KP assists xGAsst ..."
+  const shotSection=appendixIdx>=0?all.substring(appendixIdx).split('Passing')[0]:'';
+  const shotLines=shotSection.split('\n');
+  for(const line of shotLines){
+    const m=line.match(/^([A-ZÆØÅ][A-Za-zæøåÆØÅ\-\s]+?)\s+(\d+)\s+(\d+)\s+([\d.]+)\s+([\d.<]+)\s+(\d+)\s+(\d+)/);
+    if(m){
+      const name=m[1].trim();
+      if(!playerData[name])playerData[name]={name};
+      playerData[name].shots=parseInt(m[2]);
+      playerData[name].goals=parseInt(m[3]);
+      playerData[name].xG_player=parseFloat(m[4]);
+      playerData[name].key_passes=parseInt(m[6]);
+      playerData[name].assists=parseInt(m[7]);
+    }
+  }
+
+  // Parse passing table
+  // Format: "Name TB PIB PintoB_OP PintoB TIB LB LB% Pass_OP F3Pass Pass% Cross Cross%"
+  const passSection=passingIdx>=0?all.substring(passingIdx).split('Defensive')[0]:'';
+  for(const line of passSection.split('\n')){
+    const m=line.match(/^([A-ZÆØÅ][A-Za-zæøåÆØÅ\-\s]+?)\s+\d+\s+\d+\s+\d+\s+\d+\s+(\d+)\s+\d+\s+\d+\s+\d+\s+(\d+)\s+(\d+)/);
+    if(m){
+      const name=m[1].trim();
+      if(!playerData[name])playerData[name]={name};
+      playerData[name].touches_in_box=parseInt(m[2]);
+      playerData[name].final_third_passes=parseInt(m[3]);
+      playerData[name].pass_pct=parseInt(m[4]);
+    }
+  }
+
+  // Parse defensive table
+  // Format: "Name T I T+I DP T/DP% Fouls Clear AerWin Aer% Drib Disp PW"
+  const defSection=defIdx>=0?all.substring(defIdx).split('xG Chain')[0]:'';
+  for(const line of defSection.split('\n')){
+    const m=line.match(/^([A-ZÆØÅ][A-Za-zæøåÆØÅ\-\s]+?)\s+(\d+)\s+(\d+)\s+\d+\s+\d+\s+\d+\s+\d+\s+(\d+)\s+\d+\s+\d+\s+(\d+)\s+(\d+)/);
+    if(m){
+      const name=m[1].trim();
+      if(!playerData[name])playerData[name]={name};
+      playerData[name].tackles=parseInt(m[2]);
+      playerData[name].interceptions=parseInt(m[3]);
+      playerData[name].clearances=parseInt(m[4]);
+      playerData[name].dribbles=parseInt(m[5]);
+      playerData[name].dispossessions=parseInt(m[6]);
+    }
+  }
+
+  // Parse pressures per player
+  // Format: "Name 31 50.2 1.6 5" (pressures total_duration duration_per pressured_fails)
+  const pressSection=all.split('PRESSURES, ALL BY PLAYER')[1]||'';
+  for(const line of pressSection.split('\n').slice(0,35)){
+    const m=line.match(/^([A-ZÆØÅ][A-Za-zæøåÆØÅ\-\s]+?)\s+(\d+)\s+[\d.]+\s+[\d.]+\s+\d+/);
+    if(m){
+      const name=m[1].trim();
+      if(playerData[name])playerData[name].pressures=parseInt(m[2]);
+    }
+  }
+
+  // Build lineup from formations page
+  // "2 Edvard Bull-Rostrup Right Centre Back 84'"
+  // "4 C. Cringle 46'" (substitute)
+  const lineupSection=all.split('Starting lineup')[1]||'';
+  const startingNames=new Set();
+  const subNames=new Set();
+  const jerseyMap={};
+  const minutesMap={};
+  const isStarterMap={};
+
+  // Starters
+  const starterSection=lineupSection.split('Substitutes')[0]||'';
+  for(const line of starterSection.split('\n')){
+    const m=line.match(/^(\d+)\s+([A-Z][A-Za-zæøåÆØÅ\-\.]+(?:\s+[A-Za-zæøåÆØÅ\-\.]+)*)\s+(?:[A-Z][a-z]+\s)*(?:Back|Forward|Midfielder|Goalkeeper|Centre|Right|Left|Defensive|Attacking|Wide).*?(\d+)?'?\s*$/);
+    if(m){
+      jerseyMap[m[2].trim()]=parseInt(m[1]);
+      isStarterMap[m[2].trim()]=true;
+      if(m[3])minutesMap[m[2].trim()]=parseInt(m[3]);
+      else minutesMap[m[2].trim()]=90;
+    }
+  }
+
+  // Substitutes
+  const subSection=lineupSection.split('Substitutes')[1]||'';
+  for(const line of subSection.split('\n')){
+    const m=line.match(/^([A-Z][A-Za-zæøåÆØÅ\-\.]+(?:\s+[A-Za-zæøåÆØÅ\-\.]+)*)\s+(\d+)'?/);
+    if(m){
+      const name=m[1].trim();
+      const mins=parseInt(m[2]);
+      isStarterMap[name]=false;
+      minutesMap[name]=90-mins;
+    }
+  }
+
+  // Convert to players array
+  const players=Object.values(playerData).map(p=>{
+    const j=jerseyMap[p.name]||null;
+    return{
+      name:p.name,jersey:j,isStabek:true,
+      pos:j?(DEFAULT_POS[j]||'CM'):'CM',
+      minutes_played:minutesMap[p.name]||null,
+      isStarter:isStarterMap[p.name]!==false,
+      shots:p.shots||null,goals:p.goals||null,xG_player:p.xG_player||null,
+      key_passes:p.key_passes||null,assists:p.assists||null,
+      xGChain:p.xGChain||null,xG_buildup:p.xG_buildup||null,
+      pressures:p.pressures||null,
+      tackles:p.tackles||null,interceptions:p.interceptions||null,
+      clearances:p.clearances||null,dribbles:p.dribbles||null,
+      dispossessions:p.dispossessions||null,
+      touches_in_box:p.touches_in_box||null,
+      final_third_passes:p.final_third_passes||null,
+      pass_pct:p.pass_pct||null,
+      // Aliases for NFF role KPIs
+      shot:p.shots||null,passes:null,long_passes:null,
+      def_duels:p.tackles||null,att_duels:null,
+      recoveries:null,aerial_duels:null,v1_defense:null,
+      crosses:null,saves:null,distributions:null,
+      total:null,finalThird:null,finalThirdP:null,highTrans:null,
+    };
+  });
+
+  players.sort((a,b)=>{const aS=a.isStarter?1:0;const bS=b.isStarter?1:0;if(aS!==bS)return bS-aS;return(b.minutes_played||0)-(a.minutes_played||0);});
+
+  return{
+    id:Date.now()+'',source:'pdf',pdfFormat:'statsbomb',
+    stabTeam,oppTeam,filename:`${stabTeam} vs ${oppTeam}`,
+    date:dateM?dateM[1]:'?',competition:'',
+    scoreFor:sF,scoreAgainst:sA,
+    possession:stabPoss||null,pasningar:stabPasses||null,
+    avslutninger:stabShots||null,passComp:stabPassComp||null,
+    xG:stabXG||null,maal:sF,dribbSuksess:null,
+    oppShots:oppShots||null,xGa:oppXG||null,oppGoals:sA,
+    pressureRegains:stabPressureReg||null,ppda:null,
+    ballerobrMotst:null,highTrans:null,highTransP:null,finalThirdP:null,
+    egneKorner:null,oppCorners:null,oppSetPieces:null,
+    attacks:null,oppAttacks:null,dodPlusMinus:null,shotFromSet:null,
+    maalOffTrans:'',maalDefTrans:'',
+    players,
+  };
+}
+
+function parseWyscoutPDF(pages, filename){
+  const all=pages.join('\n');
+
+  // Match info from page 1
+  const teamM=all.match(/([A-ZÆØÅ][A-Za-zæøåÆØÅ\s]+?)\s+(\d+)\s*[–\-]\s*(\d+)\s+([A-ZÆØÅ][A-Za-zæøåÆØÅ\s]+)/);
+  const homeTeam=(teamM?teamM[1]:'').trim();
+  const awayTeam=(teamM?teamM[4]:'').trim();
+  const hIS=homeTeam.toLowerCase().includes('stab');
+  const stabTeam=hIS?homeTeam:awayTeam;
+  const oppTeam=hIS?awayTeam:homeTeam;
+  const homeScore=teamM?parseInt(teamM[2]):0;
+  const awayScore=teamM?parseInt(teamM[3]):0;
+  const sF=hIS?homeScore:awayScore;const sA=hIS?awayScore:homeScore;
+  const dateM=all.match(/(\d{2}\/\d{2}\/\d{4})/);
+  const dateStr=dateM?dateM[1].split('/').reverse().join('-'):'?';
+
+  // Possession
+  const possM=all.match(new RegExp(stabTeam.split(' ')[0]+'[^\\n]*?(\\d+)%\\s+(\\d+)%\\s+(\\d+)%','i'));
+  const stabPoss=possM?parseInt(possM[1]):null;
+
+  // xG from dynamics section
+  const xgM=all.match(new RegExp(stabTeam.split(' ')[0]+'[^\\n]*?([\\d.]+)\\s+[\\d.]+\\s+[\\d.]+','i'));
+  const stabXG=xgM?parseFloat(xgM[1]):null;
+
+  // PPDA
+  const ppdaM=all.match(new RegExp('PPDA[^]*?'+stabTeam.split(' ')[0]+'[^\\n]*?([\\d.]+)','i'));
+  const ppda=ppdaM?parseFloat(ppdaM[1]):null;
+
+  // Pass accuracy
+  const passAccM=all.match(new RegExp('Pass accuracy[^]*?'+stabTeam.split(' ')[0]+'[^\\n]*?(\\d+)%','i'));
+  const stabPassComp=passAccM?parseInt(passAccM[1]):null;
+
+  // ── Players from player stats table ──────────────────────────
+  // Wyscout format: "jersey Name mins goals/xG assists/xA actions/succ shots/ontarget passes/acc pass%..."
+  const playerSection=all.split('PLAYER STATS')[1]||all;
+  const players=[];
+  const playerLineRe=/^(\d+)\s+([A-Z][A-Za-zæøåÆØÅ\.\-\s]+?)\s+(\d+)'\s+/gm;
+  let pm;
+  const stabNamePart=stabTeam.toLowerCase().split(' ')[0];
+  while((pm=playerLineRe.exec(playerSection))!==null){
+    const jersey=parseInt(pm[1]);
+    const name=pm[2].trim();
+    const mins=parseInt(pm[3]);
+    const rest=playerSection.substring(pm.index+pm[0].length,pm.index+pm[0].length+120);
+
+    // Parse goals/xG: "-" or "1/1.26"
+    const gxgM=rest.match(/^(-|[\d.]+\/[\d.]+)\s+(-|[\d.]+\/[\d.]+)/);
+    let goals=null,xg=null,assists=null,xa=null;
+    if(gxgM){
+      if(gxgM[1]!=='-'){const p=gxgM[1].split('/');goals=parseInt(p[0]);xg=parseFloat(p[1]);}
+      if(gxgM[2]!=='-'){const p=gxgM[2].split('/');assists=parseInt(p[0]);xa=parseFloat(p[1]);}
+    }
+    // Passes/accurate and pass%
+    const passM2=rest.match(/(\d+)\/(\d+)\s+(\d+)%/);
+    const pctVal=passM2?parseInt(passM2[3]):null;
+    // Dribbles/successful
+    const dribM=rest.match(/(\d+)\/(\d+)\s+\d+%.*?(\d+)\/(\d+)\s+\d+%/);
+    const dribs=dribM?parseInt(dribM[3]):null;
+    // Shots/on target
+    const shotsM2=rest.match(/(\d+)\/(\d+)\s+(?:\d+%|-)/);
+    const shots=shotsM2?parseInt(shotsM2[1]):null;
+
+    players.push({
+      name,jersey,isStabek:true,
+      pos:DEFAULT_POS[jersey]||'CM',
+      minutes_played:mins,isStarter:mins>60,
+      shots,goals,xG_player:xg,assists,xA:xa,
+      xGChain:xg!=null&&xa!=null?Math.round((xg+xa)*100)/100:null,
+      pass_pct:pctVal,
+      dribbles:dribs,
+      def_duels:null,att_duels:null,interceptions:null,recoveries:null,
+      aerial_duels:null,v1_defense:null,clearances:null,
+      crosses:null,saves:null,distributions:null,key_passes:null,
+      pressures:null,touches_in_box:null,final_third_passes:null,
+      passes:null,long_passes:null,
+      shot:shots,total:null,finalThird:null,finalThirdP:null,highTrans:null,
+    });
+  }
+  players.sort((a,b)=>{const aS=a.isStarter?1:0;const bS=b.isStarter?1:0;if(aS!==bS)return bS-aS;return(b.minutes_played||0)-(a.minutes_played||0);});
+
+  return{
+    id:Date.now()+'',source:'pdf',pdfFormat:'wyscout',
+    stabTeam,oppTeam,filename:`${stabTeam} vs ${oppTeam}`,
+    date:dateStr,competition:'',
+    scoreFor:sF,scoreAgainst:sA,
+    possession:stabPoss,pasningar:null,avslutninger:null,
+    passComp:stabPassComp,xG:stabXG,maal:sF,dribbSuksess:null,
+    oppShots:null,xGa:null,oppGoals:sA,
+    pressureRegains:null,ppda,ballerobrMotst:null,
+    highTrans:null,highTransP:null,finalThirdP:null,
+    egneKorner:null,oppCorners:null,oppSetPieces:null,
+    attacks:null,oppAttacks:null,dodPlusMinus:null,shotFromSet:null,
+    maalOffTrans:'',maalDefTrans:'',
+    players,
+  };
+}
+
+async function parsePDFWithAI(file){
+  try{
+    const pages=await extractPDFText(file);
+    const fmt=detectPDFFormat(pages);
+    if(fmt==='statsbomb')return parseStatsBombPDF(pages,file.name);
+    if(fmt==='wyscout')return parseWyscoutPDF(pages,file.name);
+    throw new Error('Ukjent PDF-format. Støtter StatsBomb og Wyscout.');
+  }catch(e){
+    if(e.message.includes('Ukjent'))throw e;
+    throw new Error(`PDF-lesing feilet: ${e.message}`);
+  }
+}
+
+
+async function parseFile(file){
+  if(file.name.endsWith('.pdf'))return await parsePDFWithAI(file);
+  const buf=await file.arrayBuffer();const bytes=new Uint8Array(buf);
+  const utf16=bytes[1]===0&&bytes[3]===0&&bytes[5]===0&&bytes[7]===0;
+  const xml=new TextDecoder(utf16?'utf-16-le':'utf-8').decode(buf);
+  // Detect format
+  if(xml.includes('Ball in play'))return parseTeamXMLv1(xml,file.name);
+  if(xml.match(/^\s*<SportswareXML/)||xml.includes('Defending style of play')||xml.includes('Attacking style of play'))return parseTeamXMLv2(xml,file.name);
+  if(xml.match(/\(\d+\)/))return parsePlayerXMLv2(xml,file.name);
+  if(xml.match(/\d+\. /))return parsePlayerXMLv3(xml,file.name);
+  return null;
+}
+
+// ── Default positions ─────────────────────────────────────────────
+const DEFAULT_POS={1:'GK',2:'CB',3:'CB',4:'CB',5:'WB',6:'CM',7:'FW',8:'CM',9:'FW',10:'CAM',11:'FW',12:'GK',13:'CM',14:'WB',15:'WB',16:'SUB',17:'WB',18:'FW',19:'FW',20:'FW',21:'CB',22:'CM',23:'WB',24:'SUB',25:'CM',26:'CM',27:'CB',28:'CM',29:'WB',30:'FW',31:'CM',32:'WB',37:'SUB',50:'FW',70:'FW',87:'GK',99:'GK'};
+const POS_ORDER=['GK','CB','WB','CM','CAM','FW','SUB'];
+
+// ── Demo data ─────────────────────────────────────────────────────
+function mkP(name,jersey,pos,mins,starter,passes,shots,att_duels,interc,def_duels,recovery,aerial,v1def,drib,clearances,saves,distrib,long_pass,crosses){
+  return{name,jersey,isStabek:true,pos,minutes_played:mins,isStarter:starter,
+    passes,shots,att_duels,interceptions:interc,def_duels,recoveries:recovery,
+    aerial_duels:aerial,v1_defense:v1def,dribbles:drib,clearances,saves,
+    distributions:distrib,long_passes:long_pass,crosses,
+    total:passes+def_duels+att_duels+interc,
+    shot:shots,xG_player:null,xGChain:null,key_passes:null,assists:null,
+    pass_pct:null,final_third_passes:null,pressures:null,touches_in_box:null,
+    finalThird:null,finalThirdP:null,highTrans:null};
+}
 const DEMOS=[{
   id:'d2',source:'team',stabTeam:'Mjøndalen',oppTeam:'Ranheim',
   filename:'Mjøndalen vs Ranheim',date:'2025-05-11',competition:'OBOS Nasjonal',
@@ -1028,114 +2045,322 @@ const DEMOS=[{
 function PlayerModal({player,match,onClose}){
   const[tab,setTab]=useState('angrep');
   const[p90,setP90]=useState(false);
-  const pos=player.pos;const mins=player.minutes_played||90;
+
+  const pos=player.pos;
+  const mins=player.minutes_played||90;
   const role=NFF_ROLES[pos]||NFF_ROLES.CM;
   const src=match.source;
-  const phase=role[tab]||{desc:'',kpis:[]};
 
-  // Resolve a KPI id to its player field value
-  const getVal=(id)=>{
-    const direct=player[id]??null;
-    const alias={shots:'shot',shot:'shots'}[id];
-    const v=direct!==null?direct:(alias?player[alias]??null:null);
-    return p90&&v!=null&&typeof v==='number'?per90(v,mins):v;
-  };
+  // Resolve a field value from player object
+  function resolve(id){
+    let v=player[id]??null;
+    if(v===null){
+      // common aliases
+      if(id==='shots')v=player.shot??null;
+      else if(id==='shot')v=player.shots??null;
+    }
+    return v;
+  }
 
-  const kpis=tab==='stats'?null:phase.kpis||[];
-  const kPass=kpis?kpis.filter(k=>ev(getVal(k.id),k.t,k.op)==='pass').length:0;
-  const kTot=kpis?kpis.filter(k=>ev(getVal(k.id),k.t,k.op)!=='na').length:0;
-  const pC=kTot===0?C.border:kPass===kTot?C.green:kPass===0?C.red:C.amber;
+  // Get display value (raw or P90-adjusted)
+  function displayVal(id){
+    const raw=resolve(id);
+    if(raw===null)return null;
+    if(p90&&typeof raw==='number'&&mins>0)return Math.round(raw/mins*90*10)/10;
+    return raw;
+  }
 
-  const statRows=[
-    ['Pasninger',player.passes,C.blue],
-    ['Lange baller',player.long_passes,C.blue],
-    ['Off. dueller',player.att_duels,C.green],
-    ['Def. dueller',player.def_duels,C.red],
-    ['Interceptions',player.interceptions,C.amber],
-    ['Gjenvinnelser',player.recoveries,C.amber],
-    ['Luftdueller',player.aerial_duels,C.purple],
-    ['1v1 forsvar',player.v1_defense,C.red],
-    ['Driblinger',player.dribbles,C.green],
-    ['Avslutninger',player.shots||player.shot,C.red],
-    ['Klaringer',player.clearances,C.blue],
-    ['Innlegg',player.crosses,C.purple],
-    ['Redninger',player.saves,C.amber],
-    ['Distribusjoner',player.distributions,C.amber],
-    ['xGChain',player.xGChain,C.amber],
-    ['xG',player.xG_player,C.green],
-    ['Nøkkelpasn.',player.key_passes,C.green],
-    ['Assists',player.assists,C.green],
-    ['Pass%',player.pass_pct!=null?`${player.pass_pct}%`:null,C.text2],
-    ['Touch i boks',player.touches_in_box,C.text2],
-  ].filter(([,v])=>v!=null&&v!==0);
+  // Evaluate KPI against threshold — always compare P90 vs threshold
+  function evalKpi(id,t,op){
+    const raw=resolve(id);
+    if(raw===null||raw===undefined)return'na';
+    // Normalize: compare P90 value to threshold
+    const val90=mins>0?raw/mins*90:raw;
+    const n=+val90,tg=+t;
+    if(op==='>=')return n>=tg?'pass':'fail';
+    if(op==='>')return n>tg?'pass':'fail';
+    if(op==='<')return n<tg?'pass':'fail';
+    if(op==='<=')return n<=tg?'pass':'fail';
+    return'na';
+  }
+
+  const PHASES=['angrep','forsvar','omstilling'];
+  const phaseColors={angrep:C.green,forsvar:C.blue,omstilling:C.amber};
+
+  // Score per phase
+  function phaseScore(ph){
+    const kpis=(role[ph]?.kpis)||[];
+    let pass=0,total=0;
+    kpis.forEach(k=>{const s=evalKpi(k.id,k.t,k.op);if(s!=='na'){total++;if(s==='pass')pass++;}});
+    return{pass,total};
+  }
+
+  // Total score across all phases
+  const seen=new Set();
+  const allKpis=PHASES.flatMap(ph=>(role[ph]?.kpis||[]).filter(k=>{
+    if(seen.has(k.id))return false;seen.add(k.id);return true;
+  }));
+  let totPass=0,totTotal=0;
+  allKpis.forEach(k=>{const s=evalKpi(k.id,k.t,k.op);if(s!=='na'){totTotal++;if(s==='pass')totPass++;}});
+  const totC=totTotal===0?C.text3:totPass===totTotal?C.green:totPass===0?C.red:C.amber;
+
+  // Stat rows for "all stats" tab
+  const STAT_ROWS=[
+    ['Pasninger',      'passes',     C.blue],
+    ['Lange baller',   'long_passes',C.blue],
+    ['Offensive duel.','att_duels',  C.green],
+    ['Defensive duel.','def_duels',  C.red],
+    ['Interceptions',  'interceptions',C.amber],
+    ['Gjenvinnelser',  'recoveries', C.amber],
+    ['Luftdueller',    'aerial_duels',C.purple],
+    ['1v1 forsvar',    'v1_defense', C.red],
+    ['Driblinger',     'dribbles',   C.green],
+    ['Avslutninger',   'shots',      C.red],
+    ['Klaringer',      'clearances', C.blue],
+    ['Innlegg',        'crosses',    C.purple],
+    ['Redninger',      'saves',      C.amber],
+    ['Distribusjoner', 'distributions',C.amber],
+    ['xGChain',        'xGChain',    C.amber],
+    ['xG',             'xG_player',  C.green],
+    ['xA',             'xA',         C.green],
+    ['Nøkkelpasn.',    'key_passes', C.blue],
+    ['Assists',        'assists',    C.green],
+    ['Pass%',          'pass_pct',   C.text2],
+    ['Touch i boks',   'touches_in_box',C.text2],
+    ['Pasn. siste 3.', 'final_third_passes',C.text2],
+    ['Sekvenser',      'total',      C.blue],
+    ['Siste tredel %', 'finalThirdP',C.amber],
+    ['H. overganger',  'highTrans',  C.purple],
+  ].filter(([,id])=>resolve(id)!==null);
+
+  // Determine if P90 is meaningful
+  const hasMins=mins&&mins<89;
 
   return(
     <div className="modal-bg" onClick={e=>{if(e.target===e.currentTarget)onClose();}}>
       <div className="modal">
+
+        {/* ── Header ── */}
         <div className="modal-header">
           <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start'}}>
             <div>
-              <div style={{fontSize:9,letterSpacing:'.14em',textTransform:'uppercase',color:role.color,marginBottom:2}}>{role.label} · {match.competition||match.filename}</div>
-              <div style={{fontSize:18,fontWeight:700}}>{player.name}</div>
-              <div style={{display:'flex',gap:8,alignItems:'center',marginTop:4,flexWrap:'wrap'}}>
-                {player.isStarter!==false
-                  ?<span className="badge" style={{background:C.green+'18',border:`1px solid ${C.green}44`,color:C.green}}>Starter</span>
-                  :<span className="badge" style={{background:C.amber+'18',border:`1px solid ${C.amber}44`,color:C.amber}}>Innbytter</span>}
-                <span style={{fontSize:11,color:C.text2}}>⏱ {mins} min</span>
-                {kTot>0&&<span className="badge" style={{background:pC+'18',border:`1px solid ${pC}44`,color:pC}}>{kPass}/{kTot} rollekrav</span>}
+              <div style={{fontSize:9,letterSpacing:'.14em',textTransform:'uppercase',
+                color:role.color,marginBottom:2,fontFamily:'IBM Plex Mono,monospace'}}>
+                NFF · {role.label}
+              </div>
+              <div style={{fontSize:19,fontWeight:700}}>{player.name}</div>
+              <div style={{display:'flex',gap:8,alignItems:'center',marginTop:5,flexWrap:'wrap'}}>
+                <span style={{background:player.isStarter?C.green+'18':C.amber+'18',
+                  border:`1px solid ${player.isStarter?C.green:C.amber}44`,
+                  borderRadius:20,padding:'1px 8px',fontSize:9,fontWeight:700,
+                  color:player.isStarter?C.green:C.amber}}>
+                  {player.isStarter?'Starter':'Innbytter'}
+                </span>
+                <span style={{fontFamily:'IBM Plex Mono,monospace',fontSize:11,color:C.text2}}>
+                  ⏱ {mins}' {hasMins?<span style={{color:C.amber}}>· P90 anbefalt</span>:null}
+                </span>
+                {totTotal>0&&(
+                  <span style={{background:totC+'18',border:`1px solid ${totC}44`,
+                    borderRadius:20,padding:'2px 9px',fontSize:10,fontWeight:700,color:totC}}>
+                    {totPass}/{totTotal} rollekrav
+                  </span>
+                )}
               </div>
             </div>
-            <div style={{display:'flex',gap:6}}>
-              <button onClick={()=>setP90(!p90)} style={{background:p90?C.purple+'18':'transparent',border:`1px solid ${p90?C.purple:C.border}`,borderRadius:4,padding:'3px 8px',color:p90?C.purple:C.text2,cursor:'pointer',fontSize:10,fontWeight:700,fontFamily:'inherit'}}>P90</button>
-              <button onClick={onClose} style={{background:'transparent',border:`1px solid ${C.border}`,borderRadius:4,width:26,height:26,display:'flex',alignItems:'center',justifyContent:'center',color:C.text2,cursor:'pointer',fontSize:14}}>✕</button>
+            <div style={{display:'flex',gap:6,alignItems:'center'}}>
+              <button onClick={()=>setP90(v=>!v)}
+                style={{background:p90?C.amber+'18':'transparent',
+                  border:`1px solid ${p90?C.amber:C.border}`,borderRadius:4,
+                  padding:'4px 9px',color:p90?C.amber:C.text3,cursor:'pointer',
+                  fontSize:10,fontWeight:700,fontFamily:'inherit'}}>
+                P90
+              </button>
+              <button onClick={onClose}
+                style={{background:'transparent',border:`1px solid ${C.border}`,
+                  borderRadius:4,width:28,height:28,display:'flex',
+                  alignItems:'center',justifyContent:'center',
+                  color:C.text2,cursor:'pointer',fontSize:15,lineHeight:1}}>✕</button>
             </div>
           </div>
-        </div>
-        <div className="modal-tabs">
-          {[['angrep','Angrep'],['forsvar','Forsvar'],['omstilling','Omstilling'],['stats','All statistikk']].map(([id,lbl])=>(
-            <button key={id} className={`modal-tab${tab===id?' active':''}`} onClick={()=>setTab(id)} style={tab===id?{borderBottomColor:id==='angrep'?C.green:id==='forsvar'?C.blue:id==='omstilling'?C.amber:C.purple,color:id==='angrep'?C.green:id==='forsvar'?C.blue:id==='omstilling'?C.amber:C.purple}:{}}>{lbl}</button>
-          ))}
-        </div>
-        <div className="modal-body">
-          {tab!=='stats'&&phase.desc&&(
-            <div style={{background:C.bg3,border:`1px solid ${C.border}`,borderRadius:4,padding:'10px 12px',marginBottom:12,fontSize:11,color:C.text,lineHeight:1.7}}>
-              <div style={{fontSize:9,color:role.color,letterSpacing:'.12em',textTransform:'uppercase',fontWeight:700,marginBottom:4}}>NFF Rollekrav — {role.label} ({tab})</div>
-              {phase.desc}
-            </div>
-          )}
-          {tab!=='stats'&&kpis&&kpis.length>0&&(
-            <div className="card" style={{marginBottom:12}}>
-              {kpis.map((k,i)=>{
-                const raw=getVal(k.id);
-                const val=p90&&raw!=null&&typeof raw==='number'?per90(raw,mins):raw;
-                const s=ev(raw,k.t,k.op);const ss=SS[s];
+
+          {/* Phase score summary bar */}
+          {totTotal>0&&(
+            <div style={{display:'flex',gap:4,marginTop:10}}>
+              {PHASES.map(ph=>{
+                const{pass,total}=phaseScore(ph);
+                if(total===0)return null;
+                const col=phaseColors[ph];
+                const pct=Math.round(pass/total*100);
                 return(
-                  <div key={k.id} className="kpi-row" style={{borderBottom:i<kpis.length-1?`1px solid ${C.border}22`:'none'}}>
-                    <div className="kpi-dot" style={{border:`1.5px solid ${ss.c}`,background:ss.c+'18',color:ss.c}}>{ss.sym}</div>
-                    <div style={{flex:1}}>
-                      <div style={{fontSize:12}}>{k.label}</div>
-                      {k.info&&<div style={{fontSize:9,color:C.text3,marginTop:1}}>{k.info}</div>}
+                  <div key={ph} style={{flex:1}}>
+                    <div style={{display:'flex',justifyContent:'space-between',
+                      marginBottom:3,fontSize:9,color:col,letterSpacing:'.07em',
+                      textTransform:'uppercase',fontWeight:700}}>
+                      <span>{ph}</span>
+                      <span style={{fontFamily:'IBM Plex Mono,monospace'}}>{pass}/{total}</span>
                     </div>
-                    <div className="kpi-target">{opS[k.op]}{k.t}</div>
-                    <div className="kpi-val" style={{color:s==='na'?C.text3:ss.c}}>
-                      {val!=null?<>{val}{p90&&raw!=null?<span style={{fontSize:8,color:C.text3}}>/90</span>:null}</>:'—'}
+                    <div style={{height:4,background:C.border,borderRadius:2,overflow:'hidden'}}>
+                      <div style={{height:'100%',width:`${pct}%`,background:col,borderRadius:2}}/>
                     </div>
                   </div>
                 );
               })}
             </div>
           )}
-          {tab!=='stats'&&kpis&&kpis.length===0&&(
-            <div style={{fontSize:11,color:C.text3,fontStyle:'italic',padding:'8px 0'}}>Ingen målbare krav tilgjengelig for denne fasen med {src}-data.</div>
-          )}
+        </div>
+
+        {/* ── Tabs ── */}
+        <div className="modal-tabs">
+          {[...PHASES.map(ph=>[ph,ph.charAt(0).toUpperCase()+ph.slice(1)]),['stats','All statistikk']].map(([id,lbl])=>{
+            const isActive=tab===id;
+            const col=phaseColors[id]||C.purple;
+            return(
+              <button key={id} className={`modal-tab${isActive?' active':''}`}
+                onClick={()=>setTab(id)}
+                style={isActive?{borderBottomColor:col,color:col}:{}}>
+                {lbl}
+                {id!=='stats'&&(()=>{const{pass,total}=phaseScore(id);return total>0?<span style={{marginLeft:4,fontSize:8,color:isActive?col:C.text3}}>({pass}/{total})</span>:null;})()}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* ── Body ── */}
+        <div className="modal-body">
+
+          {/* Phase view */}
+          {tab!=='stats'&&(()=>{
+            const phase=role[tab]||{desc:'',kpis:[]};
+            const kpis=phase.kpis||[];
+            return(
+              <>
+                {/* Fagplan beskrivelse */}
+                {phase.desc&&(
+                  <div style={{background:C.bg3,border:`1px solid ${C.border}`,
+                    borderRadius:5,padding:'10px 13px',marginBottom:12,
+                    fontSize:11,color:C.text,lineHeight:1.75}}>
+                    <div style={{fontSize:9,color:phaseColors[tab],
+                      letterSpacing:'.12em',textTransform:'uppercase',
+                      fontWeight:700,marginBottom:4,fontFamily:'IBM Plex Mono,monospace'}}>
+                      NFF Rollekrav — {role.label} / {tab}
+                    </div>
+                    {phase.desc}
+                  </div>
+                )}
+
+                {/* P90 notice when player has limited minutes */}
+                {hasMins&&(
+                  <div style={{background:C.amber+'0f',border:`1px solid ${C.amber}30`,
+                    borderRadius:5,padding:'6px 12px',marginBottom:10,
+                    fontSize:10,color:C.amber,display:'flex',gap:6,alignItems:'center'}}>
+                    <span>⚡</span>
+                    <span>Krav sammenlignes mot P90-verdier (spillte {mins}'). {p90?'Verdiene nedenfor er P90.':'Slå på P90 for å se normaliserte verdier.'}</span>
+                  </div>
+                )}
+
+                {/* KPI checklist */}
+                {kpis.length===0?(
+                  <div style={{fontSize:11,color:C.text3,fontStyle:'italic',padding:'8px 0'}}>
+                    Ingen målbare krav for denne fasen.
+                  </div>
+                ):(
+                  <div style={{background:C.bg3,border:`1px solid ${C.border}`,borderRadius:6,overflow:'hidden'}}>
+                    {kpis.map((k,i)=>{
+                      const raw=resolve(k.id);
+                      const s=evalKpi(k.id,k.t,k.op);
+                      const ss=SS[s];
+                      const displayV=displayVal(k.id);
+                      // Show effective threshold (adjusted for minutes if not p90)
+                      const effThreshold=hasMins&&!p90?`${opS[k.op]}${k.t} (per 90)`:opS[k.op]+k.t;
+                      return(
+                        <div key={k.id} style={{
+                          display:'flex',alignItems:'center',gap:10,
+                          padding:'9px 13px',
+                          borderBottom:i<kpis.length-1?`1px solid ${C.border}22`:'none',
+                          background:s==='pass'?C.green+'06':s==='fail'?C.red+'06':'transparent'}}>
+
+                          {/* Status dot */}
+                          <div style={{
+                            width:20,height:20,borderRadius:'50%',flexShrink:0,
+                            border:`2px solid ${ss.c}`,background:ss.c+'22',
+                            display:'flex',alignItems:'center',justifyContent:'center',
+                            fontSize:9,fontWeight:900,color:ss.c}}>
+                            {ss.sym}
+                          </div>
+
+                          {/* Label + info */}
+                          <div style={{flex:1,minWidth:0}}>
+                            <div style={{fontSize:12,fontWeight:500,color:s==='na'?C.text3:C.text}}>
+                              {k.label}
+                            </div>
+                            {k.info&&<div style={{fontSize:10,color:C.text3,marginTop:1}}>{k.info}</div>}
+                          </div>
+
+                          {/* Threshold */}
+                          <div style={{flexShrink:0,textAlign:'right'}}>
+                            <div style={{fontSize:9,color:C.text3,
+                              fontFamily:'IBM Plex Mono,monospace'}}>{effThreshold}</div>
+                          </div>
+
+                          {/* Value + raw */}
+                          <div style={{flexShrink:0,textAlign:'right',minWidth:50}}>
+                            {raw===null?(
+                              <span style={{fontSize:11,color:C.text3}}>ingen data</span>
+                            ):(
+                              <>
+                                <div style={{fontSize:18,fontWeight:800,
+                                  color:ss.c,fontFamily:'IBM Plex Mono,monospace',lineHeight:1}}>
+                                  {p90&&hasMins?displayV:raw}
+                                </div>
+                                {hasMins&&(
+                                  <div style={{fontSize:9,color:C.text3,fontFamily:'IBM Plex Mono,monospace'}}>
+                                    {p90?`rå: ${raw}`:`P90: ${Math.round(raw/mins*90*10)/10}`}
+                                  </div>
+                                )}
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </>
+            );
+          })()}
+
+          {/* All stats tab */}
           {tab==='stats'&&(
-            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'4px 16px'}}>
-              {statRows.map(([l,v,col])=>(
-                <div key={l} style={{padding:'4px 0',borderBottom:`1px solid ${C.border}18`,fontSize:11}}>
-                  <span style={{color:C.text2}}>{l} </span>
-                  <span style={{fontWeight:700,color:col}}>{v}</span>
+            <div>
+              <div style={{fontSize:9,color:C.text3,marginBottom:10,letterSpacing:'.08em',textTransform:'uppercase',fontFamily:'IBM Plex Mono,monospace'}}>
+                Rådata · {src} · {mins}'
+              </div>
+              {STAT_ROWS.length===0?(
+                <div style={{fontSize:11,color:C.text3}}>Ingen statistikk tilgjengelig for denne kilden.</div>
+              ):(
+                <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'1px',
+                  border:`1px solid ${C.border}`,borderRadius:6,overflow:'hidden'}}>
+                  {STAT_ROWS.map(([lbl,id,col])=>{
+                    const v=resolve(id);
+                    const v90=v!=null&&mins>0?Math.round(v/mins*90*10)/10:null;
+                    return(
+                      <div key={id} style={{background:C.bg3,padding:'7px 11px',
+                        borderBottom:`1px solid ${C.border}`,borderRight:`1px solid ${C.border}`}}>
+                        <div style={{fontSize:10,color:C.text3,marginBottom:2}}>{lbl}</div>
+                        <div style={{display:'flex',justifyContent:'space-between',alignItems:'baseline',gap:8}}>
+                          <span style={{fontSize:16,fontWeight:700,color:col,
+                            fontFamily:'IBM Plex Mono,monospace'}}>{v??'—'}</span>
+                          {v90!=null&&hasMins&&(
+                            <span style={{fontSize:9,color:C.text3,fontFamily:'IBM Plex Mono,monospace'}}>
+                              {v90}/90
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
-              ))}
+              )}
             </div>
           )}
         </div>
@@ -1144,88 +2369,7 @@ function PlayerModal({player,match,onClose}){
   );
 }
 
-// ── Team KPI View ─────────────────────────────────────────────────
-function TeamKPIView({m,onUpdate}){
-  const[ek,setEk]=useState(null);
-  const[open,setOpen]=useState({ang:true,fors:true});
-  const toggle=k=>setOpen(p=>({...p,[k]:!p[k]}));
-  let tp=0,tt=0;TEAM_KPIS.forEach(g=>g.items.forEach(k=>{const s=ev(m[k.id],k.t,k.op);if(s!=='na'){tt++;if(s==='pass')tp++;}}));
-  const phScore=(kpis)=>{let p=0,t=0;kpis.forEach(g=>g.items.forEach(k=>{const s=ev(m[k.id],k.t,k.op);if(s!=='na'){t++;if(s==='pass')p++;}}));return{p,t};};
-  const as=phScore(ATTACK_KPIS),ds=phScore(DEFENSE_KPIS);
-  const renderGroup=(g)=>{
-    const items=g.items.filter(k=>k.src.includes(m.source)||k.manual);
-    if(!items.length)return null;
-    const gP=items.filter(k=>ev(m[k.id],k.t,k.op)==='pass').length;
-    const gT=items.filter(k=>ev(m[k.id],k.t,k.op)!=='na').length;
-    const tC=gT===0?C.border:gP===gT?C.green:gP===0?C.red:C.amber;
-    return(
-      <div key={g.id} className="card" style={{borderTop:`2.5px solid ${tC}`,marginBottom:6}}>
-        <div className="card-header">
-          <span className="card-label">{g.label}</span>
-          {gT>0&&<span className="pill" style={{background:tC+'18',color:tC}}>{gP}/{gT}</span>}
-        </div>
-        {items.map((k,i)=>{
-          const s=ev(m[k.id],k.t,k.op);const ss=SS[s];const isEd=ek===k.id;
-          return(
-            <div key={k.id} className="kpi-row">
-              <div className="kpi-dot" style={{border:`1.5px solid ${ss.c}`,background:ss.c+'18',color:ss.c}}>{ss.sym}</div>
-              <div className="kpi-label">{k.label}{k.manual&&<span style={{color:C.text3,fontSize:9,marginLeft:4}}>manuell</span>}</div>
-              <span className="kpi-target">{opS[k.op]}{k.t}{k.unit||''}</span>
-              {k.manual&&isEd
-                ?<input type="number" defaultValue={m[k.id]} autoFocus
-                    onBlur={e=>{onUpdate(k.id,e.target.value===''?'':(+e.target.value));setEk(null);}}
-                    style={{width:44,background:C.bg3,border:`1px solid ${C.blue}`,borderRadius:4,padding:'1px 4px',color:C.text,fontSize:14,fontWeight:800,fontFamily:'inherit',textAlign:'right',outline:'none'}}/>
-                :<div className="kpi-val" onClick={()=>k.manual&&setEk(k.id)}
-                    style={{color:s==='na'?C.text3:ss.c,cursor:k.manual?'pointer':'default'}}>
-                  {m[k.id]===null||m[k.id]===undefined||m[k.id]===''?'N/A':`${m[k.id]}${k.unit||''}`}
-                </div>}
-            </div>
-          );
-        })}
-      </div>
-    );
-  };
-  return(
-    <div>
-      <div style={{display:'flex',gap:8,alignItems:'center',marginBottom:12,flexWrap:'wrap'}}>
-        <SrcBadge src={m.source} fmt={m.pdfFormat}/>
-        <span style={{fontSize:11,color:C.text2}}>{tp}/{tt} KPIer</span>
-      </div>
-      {/* Angrep */}
-      <button className="phase-btn" onClick={()=>toggle('ang')}>
-        <div style={{display:'flex',gap:8,alignItems:'center'}}>
-          <span style={{fontSize:13,fontWeight:700,color:C.green}}>⚽ ANGREPSFASE</span>
-          <span className="pill" style={{background:C.green+'18',color:C.green}}>{as.p}/{as.t}</span>
-        </div>
-        <span style={{color:C.green,fontSize:12}}>{open.ang?'▲':'▼'}</span>
-      </button>
-      {open.ang&&<div style={{paddingLeft:6,marginBottom:8}}>{ATTACK_KPIS.map(g=>renderGroup(g))}</div>}
-      {/* Forsvar */}
-      <button className="phase-btn" onClick={()=>toggle('fors')}>
-        <div style={{display:'flex',gap:8,alignItems:'center'}}>
-          <span style={{fontSize:13,fontWeight:700,color:C.blue}}>🛡 FORSVARSFASE</span>
-          <span className="pill" style={{background:C.blue+'18',color:C.blue}}>{ds.p}/{ds.t}</span>
-        </div>
-        <span style={{color:C.blue,fontSize:12}}>{open.fors?'▲':'▼'}</span>
-      </button>
-      {open.fors&&<div style={{paddingLeft:6}}>{DEFENSE_KPIS.map(g=>renderGroup(g))}</div>}
-      {/* Quick tiles */}
-      <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(120px,1fr))',gap:7,marginTop:10}}>
-        {[['Possession',m.possession!=null?`${m.possession}%`:null,C.blue],
-          ['xG',m.xG,C.amber],['Mål for',m.maal,C.green],['Mål mot',m.oppGoals,C.red],
-          ['PPDA',m.ppda,C.purple],['Press-gjenv.',m.pressureRegains,C.green],
-        ].map(([l,v,col])=>v!=null?(
-          <div key={l} className="card" style={{padding:'8px 10px'}}>
-            <div style={{fontSize:9,color:C.text3,letterSpacing:'.1em',textTransform:'uppercase',marginBottom:2}}>{l}</div>
-            <div style={{fontSize:20,fontWeight:700,color:col,fontFamily:'IBM Plex Mono,monospace'}}>{v}</div>
-          </div>
-        ):null)}
-      </div>
-    </div>
-  );
-}
 
-// ── Player View ───────────────────────────────────────────────────
 function PlayerView({m}){
   const[posOv,setPosOv]=useState({});
   const[pf,setPf]=useState('all');
@@ -1233,18 +2377,46 @@ function PlayerView({m}){
   const[showOpp,setShowOpp]=useState(false);
   const src=m.source;
 
-  // Split by team
-  const sortP=arr=>[...arr].sort((a,b)=>{
-    const aS=a.isStarter!==false?1:0;const bS=b.isStarter!==false?1:0;
-    if(aS!==bS)return bS-aS;
-    return(b.minutes_played||b.total||0)-(a.minutes_played||a.total||0);
-  });
+  function sortP(arr){
+    return[...arr].sort((a,b)=>{
+      const aS=a.isStarter!==false?1:0,bS=b.isStarter!==false?1:0;
+      if(aS!==bS)return bS-aS;
+      return(b.minutes_played||b.total||0)-(a.minutes_played||a.total||0);
+    });
+  }
+
   const stabP=sortP(m.players.filter(p=>p.isStabek));
   const oppP=sortP(m.players.filter(p=>!p.isStabek));
-  const filterPos=arr=>arr.filter(p=>pf==='all'||(posOv[p.name]||p.pos)===pf);
 
-  // All NFF kpis for a player (all phases combined, deduplicated)
-  function allKpis(pos){
+  function filterPos(arr){
+    return arr.filter(p=>pf==='all'||(posOv[p.name]||p.pos)===pf);
+  }
+
+  // Resolve field value from player
+  function resolve(p,id){
+    let v=p[id]??null;
+    if(v===null){
+      if(id==='shots')v=p.shot??null;
+      else if(id==='shot')v=p.shots??null;
+    }
+    return v;
+  }
+
+  // Evaluate KPI using P90 normalization
+  function evalKpiP(p,k){
+    const raw=resolve(p,k.id);
+    if(raw===null||raw===undefined)return'na';
+    const mins=p.minutes_played||90;
+    const val90=mins>0?raw/mins*90:raw;
+    const n=+val90,t=+k.t;
+    if(k.op==='>=')return n>=t?'pass':'fail';
+    if(k.op==='>')return n>t?'pass':'fail';
+    if(k.op==='<')return n<t?'pass':'fail';
+    return'na';
+  }
+
+  // All unique KPIs for position (all phases)
+  function allKpisFor(pos){
     const role=NFF_ROLES[pos]||NFF_ROLES.CM;
     const seen=new Set();
     return['angrep','forsvar','omstilling'].flatMap(ph=>(role[ph]?.kpis||[]).filter(k=>{
@@ -1252,101 +2424,146 @@ function PlayerView({m}){
     }));
   }
 
-  function kpiScore(p){
-    const kpis=allKpis(posOv[p.name]||p.pos);
+  function kpiScore(p,pos){
+    const kpis=allKpisFor(pos);
     let pass=0,total=0;
-    kpis.forEach(k=>{
-      const v=p[k.id]??p[k.id==='shots'?'shot':k.id==='shot'?'shots':null];
-      const s=ev(v,k.t,k.op);
-      if(s!=='na'){total++;if(s==='pass')pass++;}
-    });
+    kpis.forEach(k=>{const s=evalKpiP(p,k);if(s!=='na'){total++;if(s==='pass')pass++;}});
     return{pass,total};
   }
 
+  // ── Player Card ────────────────────────────────────────────────
   function PlayerCard({p,isOpp}){
     const pos=posOv[p.name]||p.pos;
     const role=NFF_ROLES[pos]||NFF_ROLES.CM;
-    const kpis=allKpis(pos);
-    const{pass:kPass,total:kTot}=kpiScore(p);
+    const kpis=allKpisFor(pos);
+    const{pass:kPass,total:kTot}=kpiScore(p,pos);
     const pC=kTot===0?C.border:kPass===kTot?C.green:kPass===0?C.red:C.amber;
     const isSub=p.isStarter===false;
+    const mins=p.minutes_played||90;
+    const hasMins=mins&&mins<89;
 
-    // Individual KPI rows - show all with ✓/✗
+    // KPI rows with data
     const kpiRows=kpis.map(k=>{
-      const v=p[k.id]??(k.id==='shots'?p.shot:k.id==='shot'?p.shots:null)??null;
-      const s=ev(v,k.t,k.op);const ss=SS[s];
-      return{k,v,s,ss};
-    }).filter(({v})=>v!==null);
+      const raw=resolve(p,k.id);
+      const s=evalKpiP(p,k);
+      const ss=SS[s];
+      const v90=raw!=null&&mins>0?Math.round(raw/mins*90*10)/10:null;
+      return{k,raw,v90,s,ss};
+    }).filter(({raw})=>raw!==null);
 
     return(
       <div onClick={()=>setSel({...p,pos})}
-        style={{background:C.bg2,border:`1px solid ${C.border}`,
+        style={{
+          background:C.bg2,
+          border:`1px solid ${isOpp?C.border:C.border}`,
           borderLeft:`3px solid ${isOpp?C.border2:role.color}`,
           borderRadius:6,padding:'10px 12px',cursor:'pointer',
-          opacity:isOpp?0.75:1,transition:'border-color .15s'}}
+          opacity:isOpp?0.72:1,
+        }}
         onMouseEnter={e=>e.currentTarget.style.borderLeftColor=role.color}
         onMouseLeave={e=>e.currentTarget.style.borderLeftColor=isOpp?C.border2:role.color}>
 
-        {/* Header */}
-        <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:7}}>
-          <div>
-            <div style={{fontSize:9,color:role.color,letterSpacing:'.12em',textTransform:'uppercase',marginBottom:1}}>
+        {/* Header row */}
+        <div style={{display:'flex',justifyContent:'space-between',
+          alignItems:'flex-start',marginBottom:6}}>
+          <div style={{minWidth:0,flex:1}}>
+            <div style={{fontSize:9,color:role.color,letterSpacing:'.12em',
+              textTransform:'uppercase',marginBottom:1}}>
               {role.label}
-              {isSub&&p.minutes_played&&<span style={{color:C.amber,marginLeft:4}}>↑{90-(p.minutes_played||0)}'</span>}
-              {!isSub&&p.minutes_played&&p.minutes_played<90&&<span style={{color:C.text3,marginLeft:4}}>→{p.minutes_played}'</span>}
+              {isSub&&mins&&<span style={{color:C.amber,marginLeft:4}}>↑{90-mins}'</span>}
+              {!isSub&&mins<89&&<span style={{color:C.text3,marginLeft:4}}>→{mins}'</span>}
             </div>
-            <div style={{fontSize:13,fontWeight:700}}>{p.name}</div>
-            <div style={{fontSize:10,color:C.text3}}>⏱ {p.minutes_played||'?'} min</div>
+            <div style={{fontSize:13,fontWeight:700,
+              overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>
+              {p.name}
+            </div>
+            <div style={{display:'flex',gap:6,alignItems:'center',marginTop:2}}>
+              <span style={{fontSize:10,color:C.text3,
+                fontFamily:'IBM Plex Mono,monospace'}}>⏱{mins}'</span>
+              {hasMins&&<span style={{fontSize:9,color:C.amber}}>P90</span>}
+            </div>
           </div>
-          <div style={{display:'flex',flexDirection:'column',alignItems:'flex-end',gap:3}}>
-            {kTot>0&&<span style={{background:pC+'18',border:`1px solid ${pC}44`,borderRadius:20,padding:'1px 8px',fontSize:10,fontWeight:700,color:pC}}>{kPass}/{kTot}</span>}
+          <div style={{display:'flex',flexDirection:'column',alignItems:'flex-end',gap:4,flexShrink:0}}>
+            {/* KPI badge */}
+            {kTot>0&&(
+              <div style={{background:pC+'18',border:`1px solid ${pC}44`,
+                borderRadius:20,padding:'2px 9px',fontSize:11,fontWeight:800,
+                color:pC,fontFamily:'IBM Plex Mono,monospace'}}>
+                {kPass}/{kTot}
+              </div>
+            )}
+            {/* Position selector */}
             <select value={pos} onClick={e=>e.stopPropagation()}
               onChange={e=>setPosOv(prev=>({...prev,[p.name]:e.target.value}))}
-              style={{background:C.border,border:'none',borderRadius:4,color:C.text,fontSize:9,fontFamily:'inherit',padding:'2px 4px',cursor:'pointer'}}>
-              {POS_ORDER.map(po=><option key={po} value={po}>{NFF_ROLES[po]?.label||po}</option>)}
+              style={{background:C.border,border:'none',borderRadius:4,
+                color:C.text,fontSize:9,fontFamily:'inherit',
+                padding:'2px 4px',cursor:'pointer'}}>
+              {POS_ORDER.map(po=>(
+                <option key={po} value={po}>{NFF_ROLES[po]?.label||po}</option>
+              ))}
             </select>
           </div>
         </div>
 
-        {/* NFF KPI checklist */}
+        {/* NFF KPI checklist — all with data */}
         {kpiRows.length>0&&(
-          <div style={{borderTop:`1px solid ${C.border}`,paddingTop:6,marginBottom:7}}>
-            {kpiRows.map(({k,v,s,ss},i)=>(
-              <div key={k.id} style={{display:'flex',alignItems:'center',gap:5,
-                padding:'2px 0',borderBottom:i<kpiRows.length-1?`1px solid ${C.border}15`:'none'}}>
-                <span style={{fontSize:9,color:ss.c,fontWeight:800,width:10,flexShrink:0}}>{ss.sym}</span>
-                <span style={{flex:1,fontSize:10,color:s==='na'?C.text3:C.text}}>{k.label}</span>
-                <span style={{fontSize:9,color:C.text3,whiteSpace:'nowrap'}}>{opS[k.op]}{k.t}</span>
-                <span style={{fontSize:13,fontWeight:800,color:ss.c,minWidth:26,textAlign:'right'}}>{v}</span>
+          <div style={{borderTop:`1px solid ${C.border}`,paddingTop:6,
+            marginBottom:7,display:'flex',flexDirection:'column',gap:1}}>
+            {kpiRows.map(({k,raw,v90,s,ss})=>(
+              <div key={k.id} style={{
+                display:'flex',alignItems:'center',gap:5,
+                padding:'2px 4px',borderRadius:3,
+                background:s==='pass'?C.green+'08':s==='fail'?C.red+'06':'transparent'}}>
+                <span style={{fontSize:9,color:ss.c,fontWeight:800,
+                  width:12,flexShrink:0,textAlign:'center'}}>{ss.sym}</span>
+                <span style={{flex:1,fontSize:10,
+                  color:s==='na'?C.text3:s==='pass'?C.text:C.text}}>
+                  {k.label}
+                </span>
+                <span style={{fontSize:9,color:C.text3,flexShrink:0,
+                  fontFamily:'IBM Plex Mono,monospace'}}>
+                  {opS[k.op]}{k.t}
+                </span>
+                <span style={{fontSize:12,fontWeight:800,
+                  minWidth:28,textAlign:'right',flexShrink:0,
+                  color:ss.c,fontFamily:'IBM Plex Mono,monospace'}}>
+                  {hasMins&&v90!=null?v90:raw}
+                </span>
               </div>
             ))}
           </div>
         )}
 
-        {/* Stat summary */}
-        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'2px 8px',fontSize:11}}>
+        {/* Source-specific quick stats */}
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',
+          gap:'2px 8px',fontSize:11,marginTop:kpiRows.length>0?4:0}}>
           {(src==='playerv2'||src==='player')&&[
             ['Pasn.',p.passes,C.blue],['Def.',p.def_duels,C.red],
             ['Off.',p.att_duels,C.green],['Gjenv.',p.recoveries,C.amber],
           ].filter(([,v])=>v!=null).map(([l,v,col])=>(
-            <div key={l}><span style={{color:C.text3}}>{l} </span><span style={{fontWeight:700,color:col}}>{v}</span></div>
+            <div key={l}><span style={{color:C.text3}}>{l} </span>
+              <span style={{fontWeight:700,color:col}}>{v}</span></div>
           ))}
           {src==='pdf'&&[
             ['xGChain',p.xGChain,C.amber],['xG',p.xG_player,C.green],
             ['Avslut.',p.shots||p.shot,C.red],['Nøkkelp.',p.key_passes,C.blue],
           ].filter(([,v])=>v!=null).map(([l,v,col])=>(
-            <div key={l}><span style={{color:C.text3}}>{l} </span><span style={{fontWeight:700,color:col}}>{v}</span></div>
+            <div key={l}><span style={{color:C.text3}}>{l} </span>
+              <span style={{fontWeight:700,color:col}}>{v}</span></div>
           ))}
           {(src==='team'||src==='teamv2')&&[
-            ['Sekvenser',p.total,C.blue],
+            ['Sek.',p.total,C.blue],
             ['Siste3.%',p.finalThirdP!=null?`${p.finalThirdP}%`:null,C.amber],
-            ['Avslut.',p.shot,C.red],
-            ['H.overg.',p.highTrans,C.purple],
+            ['Avsl.',p.shot,C.red],
           ].filter(([,v])=>v!=null).map(([l,v,col])=>(
-            <div key={l}><span style={{color:C.text3}}>{l} </span><span style={{fontWeight:700,color:col}}>{v}</span></div>
+            <div key={l}><span style={{color:C.text3}}>{l} </span>
+              <span style={{fontWeight:700,color:col}}>{v}</span></div>
           ))}
         </div>
-        <div style={{fontSize:9,color:C.text3,marginTop:4,textAlign:'right'}}>Klikk for full rapport →</div>
+
+        <div style={{fontSize:9,color:C.text3,marginTop:5,textAlign:'right'}}>
+          Klikk for dyp rapport →
+        </div>
       </div>
     );
   }
@@ -1354,12 +2571,25 @@ function PlayerView({m}){
   const stabFiltered=filterPos(stabP);
   const oppFiltered=filterPos(oppP);
 
+  // Team summary stats
+  function teamSummary(players){
+    let tp=0,tt=0;
+    players.forEach(p=>{
+      const pos=posOv[p.name]||p.pos;
+      const{pass,total}=kpiScore(p,pos);tp+=pass;tt+=total;
+    });
+    return{tp,tt};
+  }
+  const{tp:stabTP,tt:stabTT}=teamSummary(stabFiltered);
+  const stabSumCol=stabTT===0?C.text3:stabTP/stabTT>=0.6?C.green:stabTP/stabTT>=0.4?C.amber:C.red;
+  const{tp:oppTP,tt:oppTT}=teamSummary(oppFiltered);
+
   return(
     <div>
       {sel&&<PlayerModal player={sel} match={m} onClose={()=>setSel(null)}/>}
 
-      {/* Pos filter */}
-      <div style={{display:'flex',gap:5,marginBottom:12,flexWrap:'wrap'}}>
+      {/* Position filter */}
+      <div style={{display:'flex',gap:4,marginBottom:12,flexWrap:'wrap'}}>
         {['all',...POS_ORDER].map(p=>{
           const role=NFF_ROLES[p];const col=role?.color||C.text2;
           return(
@@ -1375,23 +2605,26 @@ function PlayerView({m}){
 
       {/* Empty state */}
       {m.players.length===0&&(
-        <div style={{background:C.bg3,border:`1px solid ${C.border}`,borderRadius:6,padding:'16px',marginTop:8}}>
-          <div style={{fontSize:13,fontWeight:700,color:C.text,marginBottom:6}}>Ingen individuelle spillerdata</div>
-          <div style={{fontSize:12,color:C.text2,lineHeight:1.7}}>
-            Denne kampen er kodet som team-XML uten spilleraksjoner.<br/>
-            For individuelle profiler mot NFF rollekrav, last opp:
+        <div style={{background:C.bg3,border:`1px solid ${C.border}`,
+          borderRadius:6,padding:'16px',marginTop:4}}>
+          <div style={{fontSize:13,fontWeight:700,color:C.text,marginBottom:6}}>
+            Ingen individuelle spillerdata
           </div>
-          <div style={{marginTop:10,display:'flex',flexDirection:'column',gap:4}}>
+          <div style={{fontSize:12,color:C.text2,lineHeight:1.7}}>
+            Denne kampen er importert som team-XML uten spilleraksjoner.
+            Last opp en av disse for individuelle NFF-profiler:
+          </div>
+          <div style={{marginTop:10,display:'flex',flexDirection:'column',gap:6}}>
             {[
-              ['🟢','Sportscode Spiller-XML','Effektivitet, dueller, pasninger, recoveries'],
+              ['🟢','Sportscode Spiller-XML (UTF-16)','Effektivitet, dueller, pasninger, gjenvinnelser'],
               ['🟠','StatsBomb PDF','xG, xGChain, press, taklinger, touches i boks'],
-              ['🟣','Wyscout PDF','xG, xA, PPDA, dueller, driblinger'],
+              ['🟣','Wyscout PDF','xG, xA, PPDA, dueller, driblinger, pasningsprosent'],
             ].map(([icon,type,desc])=>(
               <div key={type} style={{display:'flex',gap:8,alignItems:'flex-start'}}>
-                <span>{icon}</span>
+                <span style={{fontSize:14}}>{icon}</span>
                 <div>
-                  <span style={{fontSize:11,fontWeight:700,color:C.text}}>{type}</span>
-                  <span style={{fontSize:10,color:C.text3,marginLeft:6}}>{desc}</span>
+                  <div style={{fontSize:11,fontWeight:700,color:C.text}}>{type}</div>
+                  <div style={{fontSize:10,color:C.text3}}>{desc}</div>
                 </div>
               </div>
             ))}
@@ -1399,45 +2632,73 @@ function PlayerView({m}){
         </div>
       )}
 
-      {/* Hjemmelag / ditt lag */}
+      {/* ── Stabæk-laget / ditt lag ── */}
       {stabFiltered.length>0&&(
         <div style={{marginBottom:20}}>
-          <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',
-            marginBottom:8,paddingBottom:6,borderBottom:`1.5px solid ${C.blue}44`}}>
+          <div style={{display:'flex',justifyContent:'space-between',
+            alignItems:'center',marginBottom:8,
+            paddingBottom:7,borderBottom:`2px solid ${C.blue}33`}}>
             <div>
-              <span style={{fontSize:11,fontWeight:700,color:C.blue,letterSpacing:'.08em',textTransform:'uppercase'}}>{m.stabTeam}</span>
-              <span style={{fontSize:10,color:C.text3,marginLeft:8}}>{stabFiltered.length} spillere</span>
+              <span style={{fontSize:12,fontWeight:700,color:C.blue,
+                letterSpacing:'.07em',textTransform:'uppercase'}}>{m.stabTeam}</span>
+              <span style={{fontSize:10,color:C.text3,marginLeft:8}}>
+                {stabFiltered.length} sp.
+              </span>
             </div>
-            {/* KPI summary for team */}
-            {(()=>{
-              let tp=0,tt=0;
-              stabFiltered.forEach(p=>{const{pass,total}=kpiScore(p);tp+=pass;tt+=total;});
-              const col=tt===0?C.text3:tp/tt>.6?C.green:tp/tt>.4?C.amber:C.red;
-              return tt>0?<span style={{fontSize:11,fontWeight:700,color:col}}>{tp}/{tt} krav møtt</span>:null;
-            })()}
+            {stabTT>0&&(
+              <div style={{textAlign:'right'}}>
+                <div style={{fontSize:11,fontWeight:700,color:stabSumCol}}>
+                  {stabTP}/{stabTT} krav
+                </div>
+                <div style={{height:3,width:80,background:C.border,
+                  borderRadius:2,overflow:'hidden',marginTop:2}}>
+                  <div style={{height:'100%',
+                    width:`${Math.round(stabTP/stabTT*100)}%`,
+                    background:stabSumCol,borderRadius:2}}/>
+                </div>
+              </div>
+            )}
           </div>
           <div className="player-grid">
-            {stabFiltered.map(p=><PlayerCard key={p.name} p={p} isOpp={false}/>)}
+            {stabFiltered.map(p=>(
+              <PlayerCard key={p.name} p={p} isOpp={false}/>
+            ))}
           </div>
         </div>
       )}
 
-      {/* Motstander */}
+      {/* ── Motstander (kollapsbar) ── */}
       {oppP.length>0&&(
         <div>
           <button onClick={()=>setShowOpp(o=>!o)}
-            style={{width:'100%',background:'transparent',border:`1px solid ${C.border}`,
-              borderRadius:6,padding:'7px 12px',cursor:'pointer',display:'flex',
-              justifyContent:'space-between',alignItems:'center',marginBottom:8,fontFamily:'inherit'}}>
-            <div>
-              <span style={{fontSize:11,fontWeight:700,color:C.text2,letterSpacing:'.08em',textTransform:'uppercase'}}>{m.oppTeam}</span>
-              <span style={{fontSize:10,color:C.text3,marginLeft:8}}>{oppFiltered.length} spillere</span>
+            style={{width:'100%',background:'transparent',
+              border:`1px solid ${C.border}`,borderRadius:6,
+              padding:'8px 13px',cursor:'pointer',
+              display:'flex',justifyContent:'space-between',
+              alignItems:'center',marginBottom:showOpp?8:0,fontFamily:'inherit'}}>
+            <div style={{display:'flex',alignItems:'center',gap:10}}>
+              <span style={{fontSize:11,fontWeight:700,
+                color:C.text2,letterSpacing:'.07em',textTransform:'uppercase'}}>
+                {m.oppTeam}
+              </span>
+              <span style={{fontSize:10,color:C.text3}}>
+                {oppFiltered.length} sp.
+              </span>
+              {oppTT>0&&(
+                <span style={{fontSize:10,color:C.text3}}>
+                  · {oppTP}/{oppTT} krav
+                </span>
+              )}
             </div>
-            <span style={{color:C.text3,fontSize:12}}>{showOpp?'▲':'▼'}</span>
+            <span style={{color:C.text3,fontSize:12}}>
+              {showOpp?'▲':'▼ vis motstander'}
+            </span>
           </button>
           {showOpp&&(
             <div className="player-grid">
-              {oppFiltered.map(p=><PlayerCard key={p.name} p={p} isOpp={true}/>)}
+              {oppFiltered.map(p=>(
+                <PlayerCard key={p.name} p={p} isOpp={true}/>
+              ))}
             </div>
           )}
         </div>
