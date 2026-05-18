@@ -1073,6 +1073,111 @@ const DEMOS=[
 ];
 
 // ── Player Modal ──────────────────────────────────────────────────
+function TeamKPIView({m,onUpdate}){
+  const[ek,setEk]=useState(null);
+  const[open,setOpen]=useState({ang:true,fors:true});
+  const toggle=k=>setOpen(p=>({...p,[k]:!p[k]}));
+
+  let tp=0,tt=0;
+  TEAM_KPIS.forEach(g=>g.items.forEach(k=>{
+    const s=ev(m[k.id],k.t,k.op);
+    if(s!=='na'){tt++;if(s==='pass')tp++;}
+  }));
+
+  const phScore=(kpis)=>{
+    let p=0,t=0;
+    kpis.forEach(g=>g.items.forEach(k=>{
+      const s=ev(m[k.id],k.t,k.op);
+      if(s!=='na'){t++;if(s==='pass')p++;}
+    }));
+    return{p,t};
+  };
+  const as=phScore(ATTACK_KPIS),ds=phScore(DEFENSE_KPIS);
+
+  const renderGroup=(g)=>{
+    const items=g.items.filter(k=>k.src.includes(m.source)||k.manual);
+    if(!items.length)return null;
+    const gP=items.filter(k=>ev(m[k.id],k.t,k.op)==='pass').length;
+    const gT=items.filter(k=>ev(m[k.id],k.t,k.op)!=='na').length;
+    const tC=gT===0?C.border:gP===gT?C.green:gP===0?C.red:C.amber;
+    return(
+      <div key={g.id} className="card" style={{borderTop:`2.5px solid ${tC}`,marginBottom:6}}>
+        <div className="card-header">
+          <span className="card-label">{g.label}</span>
+          {gT>0&&<span className="pill" style={{background:tC+'18',color:tC}}>{gP}/{gT}</span>}
+        </div>
+        {items.map((k,i)=>{
+          const s=ev(m[k.id],k.t,k.op);const ss=SS[s];const isEd=ek===k.id;
+          return(
+            <div key={k.id} className="kpi-row">
+              <div className="kpi-dot" style={{border:`1.5px solid ${ss.c}`,background:ss.c+'18',color:ss.c}}>{ss.sym}</div>
+              <div className="kpi-label">{k.label}{k.manual&&<span style={{color:C.text3,fontSize:9,marginLeft:4}}>manuell</span>}</div>
+              <span className="kpi-target">{opS[k.op]}{k.t}{k.unit||''}</span>
+              {k.manual&&isEd
+                ?<input type="number" defaultValue={m[k.id]} autoFocus
+                    onBlur={e=>{onUpdate(k.id,e.target.value===''?'':(+e.target.value));setEk(null);}}
+                    style={{width:44,background:C.bg3,border:`1px solid ${C.blue}`,borderRadius:4,
+                      padding:'1px 4px',color:C.text,fontSize:14,fontWeight:800,
+                      fontFamily:'inherit',textAlign:'right',outline:'none'}}/>
+                :<div className="kpi-val"
+                    onClick={()=>k.manual&&setEk(k.id)}
+                    style={{color:s==='na'?C.text3:ss.c,cursor:k.manual?'pointer':'default'}}>
+                  {m[k.id]===null||m[k.id]===undefined||m[k.id]===''?'N/A':`${m[k.id]}${k.unit||''}`}
+                </div>}
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
+
+  return(
+    <div>
+      <div style={{display:'flex',gap:8,alignItems:'center',marginBottom:12,flexWrap:'wrap'}}>
+        <SrcBadge src={m.source} fmt={m.pdfFormat}/>
+        <span style={{fontSize:11,color:C.text2}}>{tp}/{tt} KPIer</span>
+      </div>
+
+      {/* ANGREPSFASE */}
+      <button className="phase-btn" onClick={()=>toggle('ang')}>
+        <div style={{display:'flex',gap:8,alignItems:'center'}}>
+          <span style={{fontSize:13,fontWeight:700,color:C.green}}>⚽ ANGREPSFASE</span>
+          <span className="pill" style={{background:C.green+'18',color:C.green}}>{as.p}/{as.t}</span>
+        </div>
+        <span style={{color:C.green,fontSize:12}}>{open.ang?'▲':'▼'}</span>
+      </button>
+      {open.ang&&<div style={{paddingLeft:6,marginBottom:8}}>{ATTACK_KPIS.map(g=>renderGroup(g))}</div>}
+
+      {/* FORSVARSFASE */}
+      <button className="phase-btn" onClick={()=>toggle('fors')}>
+        <div style={{display:'flex',gap:8,alignItems:'center'}}>
+          <span style={{fontSize:13,fontWeight:700,color:C.blue}}>🛡 FORSVARSFASE</span>
+          <span className="pill" style={{background:C.blue+'18',color:C.blue}}>{ds.p}/{ds.t}</span>
+        </div>
+        <span style={{color:C.blue,fontSize:12}}>{open.fors?'▲':'▼'}</span>
+      </button>
+      {open.fors&&<div style={{paddingLeft:6}}>{DEFENSE_KPIS.map(g=>renderGroup(g))}</div>}
+
+      {/* Quick tiles */}
+      <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(120px,1fr))',gap:7,marginTop:10}}>
+        {[
+          ['Possession',m.possession!=null?`${m.possession}%`:null,C.blue],
+          ['xG',m.xG,C.amber],
+          ['Mål for',m.maal,C.green],
+          ['Mål mot',m.oppGoals,C.red],
+          ['PPDA',m.ppda,C.purple],
+          ['Press-gjenv.',m.pressureRegains,C.green],
+        ].filter(([,v])=>v!=null).map(([l,v,col])=>(
+          <div key={l} className="card" style={{padding:'8px 10px'}}>
+            <div style={{fontSize:9,color:C.text3,letterSpacing:'.1em',textTransform:'uppercase',marginBottom:2}}>{l}</div>
+            <div style={{fontSize:20,fontWeight:700,color:col,fontFamily:'IBM Plex Mono,monospace'}}>{v}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function PlayerModal({player,match,onClose}){
   const[tab,setTab]=useState('angrep');
   const[p90,setP90]=useState(false);
