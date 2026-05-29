@@ -273,6 +273,22 @@ function importWorkspace(file){
   });
 }
 
+/* ── Button style helper ──────────────────────────────────────── */
+function nffBtnStyle(col){
+  return {
+    background: col + '18',
+    border: `1px solid ${col}55`,
+    borderRadius: 5,
+    padding: '5px 11px',
+    cursor: 'pointer',
+    color: col,
+    fontSize: 12,
+    fontWeight: 700,
+    fontFamily: 'Arial,sans-serif',
+    whiteSpace: 'nowrap'
+  };
+}
+
 
 // ── Colours ───────────────────────────────────────────────────────
 const _dark = window.matchMedia && window.matchMedia('(prefers-color-scheme:dark)').matches;
