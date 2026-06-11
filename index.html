@@ -144,7 +144,7 @@ input,select,button{font-family:inherit;color:var(--text);}
 </head>
 <body>
 
-<div id="screen-pw" class="auth">
+<div id="screen-pw" class="auth-wrap">
   <div class="auth-box">
     <div class="auth-logo">KAMPANALYSE · NFF</div>
     <div class="auth-title">Logg inn</div>
@@ -263,9 +263,9 @@ function importWorkspace(file){
     r.onload=()=>{
       try{
         const data=JSON.parse(r.result);
-        if(data.matches&&Array.isArray(data.matches))resolve(data.matches);
-        else if(Array.isArray(data))resolve(data);
-        else reject(new Error('Ugyldig format'));
+        const arr=data.matches&&Array.isArray(data.matches)?data.matches:Array.isArray(data)?data:null;
+        if(arr&&arr.length)resolve(arr);
+        else reject(new Error('Ugyldig format eller tom fil'));
       }catch(e){reject(e);}
     };
     r.onerror=()=>reject(new Error('Kunne ikke lese fil'));
@@ -1090,7 +1090,7 @@ function parseTeamXMLv1(xml, fn) {
       if (ou.some(o => ['Shot', 'Shot on goal', 'Goal'].includes(o))) pd[p].shot++;
     });
   });
-  const sm = fn.match(/(\d+)-(\d+)/),
+  const sm = scoreFromFilename(fn),
     dm = fn.match(/\d{4}-\d{2}-\d{2}/);
   const sF = sm ? parseInt(sm[2]) : stabGo;
   const sA = sm ? parseInt(sm[1]) : oppGo;
@@ -1169,7 +1169,7 @@ function parseTeamXMLv2(xml, fn) {
   const code = i => i.querySelector('code')?.textContent || '';
   const n = c => insts.filter(i => code(i) === c).length;
   const dm = fn.match(/\d{4}-\d{2}-\d{2}/);
-  const sm = fn.match(/(\d+)-(\d+)/);
+  const sm = scoreFromFilename(fn);
   const teamLabel = insts.find(i => {
     const l = i.querySelector('label text');
     return l && l.textContent;
@@ -1187,7 +1187,7 @@ function parseTeamXMLv2(xml, fn) {
   const pressureRegains = n('Recovery') || null;
   const ballerobrMotst = n('Attacking style of play') || null;
   const ppda = null; // not directly available
-  const sF = sm ? parseInt(sm[2]) : shots;
+  const sF = sm ? parseInt(sm[2]) : n('Goals');
   const sA = sm ? parseInt(sm[1]) : oppGoals;
   return {
     id: Date.now() + '',
@@ -1233,10 +1233,20 @@ function parsePlayerXMLv2(xml, fn) {
   const doc = new DOMParser().parseFromString(xml, 'text/xml');
   const insts = Array.from(doc.querySelectorAll('instance'));
   const pd = {};
+  const clipsBy = {};
   insts.forEach(inst => {
     const code = inst.querySelector('code')?.textContent || '';
     if (!code.match(/^\(\d+\)/)) return;
     const types = [...inst.querySelectorAll('label text')].map(t => t.textContent).filter(Boolean);
+    const st = parseFloat(inst.querySelector('start')?.textContent);
+    if (!isNaN(st)) {
+      const en = parseFloat(inst.querySelector('end')?.textContent);
+      (clipsBy[code] = clipsBy[code] || []).push({
+        start: st,
+        end: isNaN(en) ? st : en,
+        label: types[0] || 'Aksjon'
+      });
+    }
     if (!pd[code]) pd[code] = {
       passes: 0,
       long_passes: 0,
@@ -1263,9 +1273,9 @@ function parsePlayerXMLv2(xml, fn) {
     });
   });
   const dm = fn.match(/\d{4}-\d{2}-\d{2}/);
-  const sm = fn.match(/(\d+)-(\d+)/);
+  const sm = scoreFromFilename(fn);
   const stabTeam = fn.toLowerCase().includes('stabæk') || fn.toLowerCase().includes('stabek') ? 'Stabæk' : 'Hjemmelag';
-  const oppTeam = fn.replace(/.*stab[æe]k[-_]/i, '').replace(/\.xml$/i, '').replace(/[-_]\d{4}.*$/, '').replace(/_/g, ' ').trim() || 'Motstander';
+  const oppTeam = fn.replace(/.*stab[æe]k[-_]/i, '').replace(/\.xml$/i, '').replace(/[-_]\d{4}.*$/, '').replace(/[-_\s]*\d{1,2}\s*-\s*\d{1,2}.*$/, '').replace(/_/g, ' ').trim() || 'Motstander';
   // Estimate possession from ball work
   const allPasses = Object.values(pd).reduce((s, p) => s + p.passes, 0);
   const players = Object.entries(pd).map(([name, s]) => {
@@ -1281,7 +1291,8 @@ function parsePlayerXMLv2(xml, fn) {
       isStarter: total > 20,
       ...s,
       total,
-      shot: s.shots
+      shot: s.shots,
+      clips: (clipsBy[name] || []).sort((a, b) => a.start - b.start)
     };
   });
   // Sort by total actions
@@ -1332,10 +1343,20 @@ function parsePlayerXMLv3(xml, fn) {
   const doc = new DOMParser().parseFromString(xml, 'text/xml');
   const insts = Array.from(doc.querySelectorAll('instance'));
   const pd = {};
+  const clipsBy = {};
   insts.forEach(inst => {
     const code = inst.querySelector('code')?.textContent || '';
     if (!code.match(/^\d+\./)) return;
     const types = [...inst.querySelectorAll('label')].filter(l => l.querySelector('group')?.textContent === '1 - Type').map(l => l.querySelector('text')?.textContent || '');
+    const st = parseFloat(inst.querySelector('start')?.textContent);
+    if (!isNaN(st)) {
+      const en = parseFloat(inst.querySelector('end')?.textContent);
+      (clipsBy[code] = clipsBy[code] || []).push({
+        start: st,
+        end: isNaN(en) ? st : en,
+        label: types[0] || 'Aksjon'
+      });
+    }
     if (!pd[code]) pd[code] = {
       passes: 0,
       long_passes: 0,
@@ -1359,7 +1380,7 @@ function parsePlayerXMLv3(xml, fn) {
     });
   });
   const dm = fn.match(/\d{4}-\d{2}-\d{2}/);
-  const sm = fn.match(/(\d+)-(\d+)/);
+  const sm = scoreFromFilename(fn);
   const nameMatch = fn.match(/^([A-Za-zæøåÆØÅ]+)_-_([A-Za-zæøåÆØÅ]+)/);
   const home = nameMatch ? nameMatch[1].replace(/_/g, ' ') : 'Hjemmelag';
   const away = nameMatch ? nameMatch[2].replace(/_/g, ' ') : 'Bortelag';
@@ -1379,7 +1400,8 @@ function parsePlayerXMLv3(xml, fn) {
       isStarter: total > 30,
       ...s,
       total,
-      shot: s.shots
+      shot: s.shots,
+      clips: (clipsBy[name] || []).sort((a, b) => a.start - b.start)
     };
   });
   players.sort((a, b) => (b.total || 0) - (a.total || 0));
@@ -1459,8 +1481,8 @@ function parseStatsBombPDF(pages, filename) {
   const stabTeam = hIS ? homeTeam : awayTeam;
   const oppTeam = hIS ? awayTeam : homeTeam;
 
-  // Score from race chart or match stats
-  const scoreM = all.match(/(\d+)\s*[–\-]\s*(\d+)/);
+  // Score from race chart or match stats (1-2 digits to avoid matching dates)
+  const scoreM = all.match(/(?<!\d)(\d{1,2})\s*[–\-]\s*(\d{1,2})(?!\d)/);
   const homeScore = scoreM ? parseInt(scoreM[1]) : 0;
   const awayScore = scoreM ? parseInt(scoreM[2]) : 0;
   const sF = hIS ? homeScore : awayScore;
@@ -1500,7 +1522,6 @@ function parseStatsBombPDF(pages, filename) {
   // ── Players ───────────────────────────────────────────────────
   // Find the appendix section - look for "APPENDIX" or "Shots and Key-Passes"
   const appendixIdx = all.indexOf('Shots and Key');
-  const xgchainIdx = all.indexOf('xG Chain\n') || all.indexOf('xGChain\n');
   const passingIdx = all.indexOf('Passing and Touches');
   const defIdx = all.indexOf('Defensive Actions');
   const playerData = {};
@@ -1875,18 +1896,47 @@ async function parsePDFWithAI(file) {
     throw new Error(`PDF-lesing feilet: ${e.message}`);
   }
 }
+function uid() {
+  return Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+}
+// Score from filename, ignoring dates (e.g. "2025-05-11" must not parse as a score)
+function scoreFromFilename(fn) {
+  const cleaned = (fn || '').replace(/\d{4}-\d{2}-\d{2}/g, '');
+  return cleaned.match(/(?<!\d)(\d{1,2})\s*-\s*(\d{1,2})(?!\d)/);
+}
+// Ensure every match has homeTeam/awayTeam and every player a team,
+// so views that filter on p.team work for all sources.
+function normalizeMatch(m) {
+  if (!m) return m;
+  m.homeTeam = m.homeTeam || m.stabTeam || 'Hjemmelag';
+  m.awayTeam = m.awayTeam || m.oppTeam || 'Bortelag';
+  m.stabTeam = m.stabTeam || m.homeTeam;
+  m.oppTeam = m.oppTeam || m.awayTeam;
+  (m.players || []).forEach(p => {
+    if (!p.team) p.team = p.isStabek === false ? m.awayTeam : m.homeTeam;
+  });
+  return m;
+}
 async function parseFile(file) {
-  if (file.name.endsWith('.pdf')) return await parsePDFWithAI(file);
-  const buf = await file.arrayBuffer();
-  const bytes = new Uint8Array(buf);
-  const utf16 = bytes[1] === 0 && bytes[3] === 0 && bytes[5] === 0 && bytes[7] === 0;
-  const xml = new TextDecoder(utf16 ? 'utf-16-le' : 'utf-8').decode(buf);
-  // Detect format
-  if (xml.includes('Ball in play')) return parseTeamXMLv1(xml, file.name);
-  if (xml.match(/^\s*<SportswareXML/) || xml.includes('Defending style of play') || xml.includes('Attacking style of play')) return parseTeamXMLv2(xml, file.name);
-  if (xml.match(/\(\d+\)/)) return parsePlayerXMLv2(xml, file.name);
-  if (xml.match(/\d+\. /)) return parsePlayerXMLv3(xml, file.name);
-  return null;
+  let res = null;
+  if (file.name.endsWith('.pdf')) {
+    res = await parsePDFWithAI(file);
+  } else {
+    const buf = await file.arrayBuffer();
+    const bytes = new Uint8Array(buf);
+    const utf16 = bytes[1] === 0 && bytes[3] === 0 && bytes[5] === 0 && bytes[7] === 0;
+    const xml = new TextDecoder(utf16 ? 'utf-16-le' : 'utf-8').decode(buf);
+    // Detect format
+    if (xml.includes('Ball in play')) res = parseTeamXMLv1(xml, file.name);
+    else if (xml.match(/^\s*<SportswareXML/) || xml.includes('Defending style of play') || xml.includes('Attacking style of play')) res = parseTeamXMLv2(xml, file.name);
+    else if (xml.match(/\(\d+\)/)) res = parsePlayerXMLv2(xml, file.name);
+    else if (xml.match(/\d+\. /)) res = parsePlayerXMLv3(xml, file.name);
+  }
+  if (res) {
+    res.id = uid();
+    normalizeMatch(res);
+  }
+  return res;
 }
 
 // ── Default positions ─────────────────────────────────────────────
@@ -3239,7 +3289,7 @@ function PlayerModal({
     };
     window.addEventListener('keydown', h);
     return () => window.removeEventListener('keydown', h);
-  }, []);
+  }, [onClose]);
   const otherMatches = (allMatches || []).filter(mx => mx.id !== match.id);
   const cmpMx = cmpMatchIdx != null ? otherMatches[cmpMatchIdx] : null;
   const cmpPlayer = cmpMx ? (cmpMx.players || []).find(p => p.name === player.name) : null;
@@ -4857,11 +4907,383 @@ function PlayerView({
       pct: tt ? Math.round(tp / tt * 100) : 0
     };
   }
+  /* Player Ranking (per match) */
+  function PlayerRankingNFF() {
+    const allFiltered = m.players.filter(p => {
+      if (search && !p.name.toLowerCase().includes(search.toLowerCase())) return false;
+      return true;
+    });
+    const ranked = [...allFiltered].map(p => {
+      const pos = posOv[p.name] || p.pos;
+      const {
+        pass,
+        total,
+        pct
+      } = scoreAllKpis(p, pos);
+      const teamColor = p.team === homeTeam ? C.blue : C.amber;
+      return {
+        ...p,
+        pos,
+        pass,
+        total,
+        pct,
+        teamColor
+      };
+    }).sort((a, b) => b.pct - a.pct || b.pass - a.pass);
+    return /*#__PURE__*/React.createElement("div", {
+      style: {
+        overflowX: 'auto'
+      }
+    }, /*#__PURE__*/React.createElement("table", {
+      style: {
+        width: '100%',
+        borderCollapse: 'collapse',
+        minWidth: 420
+      }
+    }, /*#__PURE__*/React.createElement("thead", null, /*#__PURE__*/React.createElement("tr", {
+      style: {
+        borderBottom: `1.5px solid ${C.border}`,
+        background: C.bg3
+      }
+    }, ['#', 'Spiller', 'Posisjon', 'Min.', 'Krav', 'Score'].map(h => /*#__PURE__*/React.createElement("th", {
+      key: h,
+      style: {
+        padding: '7px 10px',
+        textAlign: h === '#' || h === 'Score' ? 'center' : 'left',
+        fontSize: FONT.xs,
+        letterSpacing: '.08em',
+        textTransform: 'uppercase',
+        color: C.text2,
+        whiteSpace: 'nowrap'
+      }
+    }, h)))), /*#__PURE__*/React.createElement("tbody", null, ranked.map((p, i) => {
+      const col = p.pct >= 70 ? C.green : p.pct >= 50 ? C.amber : C.red;
+      return /*#__PURE__*/React.createElement("tr", {
+        key: p.name + p.team,
+        onClick: () => setSel(p),
+        style: {
+          borderBottom: `1px solid ${C.border}`,
+          cursor: 'pointer',
+          background: i === 0 ? C.green + '06' : C.bg2
+        }
+      }, /*#__PURE__*/React.createElement("td", {
+        style: {
+          padding: '8px 10px',
+          textAlign: 'center',
+          fontSize: FONT.small,
+          fontWeight: 700,
+          color: i === 0 ? C.green : C.text2,
+          fontFamily: FONT.mono
+        }
+      }, i + 1), /*#__PURE__*/React.createElement("td", {
+        style: {
+          padding: '8px 10px'
+        }
+      }, /*#__PURE__*/React.createElement("div", {
+        style: {
+          fontSize: FONT.body,
+          fontWeight: 600,
+          color: C.text
+        }
+      }, p.name), /*#__PURE__*/React.createElement("div", {
+        style: {
+          fontSize: FONT.xs,
+          display: 'flex',
+          gap: 5,
+          alignItems: 'center',
+          marginTop: 1
+        }
+      }, /*#__PURE__*/React.createElement("span", {
+        style: {
+          color: p.teamColor,
+          fontWeight: 700
+        }
+      }, p.team || '?'), p.isStarter === false && /*#__PURE__*/React.createElement("span", {
+        style: {
+          color: C.amber
+        }
+      }, "Innbytter"))), /*#__PURE__*/React.createElement("td", {
+        style: {
+          padding: '8px 10px'
+        }
+      }, /*#__PURE__*/React.createElement("span", {
+        style: {
+          fontSize: FONT.xs,
+          color: NFF_ROLES[p.pos]?.color || C.blue,
+          fontWeight: 700
+        }
+      }, NFF_ROLES[p.pos]?.label || p.pos)), /*#__PURE__*/React.createElement("td", {
+        style: {
+          padding: '8px 10px',
+          fontSize: FONT.small,
+          color: C.text2,
+          fontFamily: FONT.mono
+        }
+      }, p.minutes_played || 90, "'"), /*#__PURE__*/React.createElement("td", {
+        style: {
+          padding: '8px 10px'
+        }
+      }, /*#__PURE__*/React.createElement("span", {
+        style: {
+          fontWeight: 700,
+          color: col,
+          fontFamily: FONT.mono
+        }
+      }, p.pass, "/", p.total)), /*#__PURE__*/React.createElement("td", {
+        style: {
+          padding: '8px 10px',
+          textAlign: 'center'
+        }
+      }, /*#__PURE__*/React.createElement("div", {
+        style: {
+          display: 'flex',
+          gap: 5,
+          alignItems: 'center',
+          justifyContent: 'center'
+        }
+      }, /*#__PURE__*/React.createElement("div", {
+        style: {
+          width: 55,
+          height: 4,
+          background: C.border,
+          borderRadius: 3,
+          overflow: 'hidden'
+        }
+      }, /*#__PURE__*/React.createElement("div", {
+        style: {
+          height: '100%',
+          width: `${p.pct}%`,
+          background: col,
+          borderRadius: 3
+        }
+      })), /*#__PURE__*/React.createElement("span", {
+        style: {
+          fontSize: FONT.xs,
+          fontWeight: 700,
+          color: col,
+          minWidth: 28,
+          fontFamily: FONT.mono
+        }
+      }, p.pct, "%"))));
+    }))));
+  }
+
+  /* Shortlist view */
+  function ShortlistView() {
+    if (!shortlist.length) return /*#__PURE__*/React.createElement("div", {
+      style: {
+        textAlign: 'center',
+        padding: '32px 0',
+        color: C.text2
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 32,
+        marginBottom: 12
+      }
+    }, "★"), /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: FONT.body,
+        fontWeight: 700,
+        color: C.text,
+        marginBottom: 6
+      }
+    }, "Ingen spillere shortlistet"), /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: FONT.small,
+        lineHeight: 1.6
+      }
+    }, "Klikk \xAB☆ Shortlist\xBB p\xE5 et spillerkort for \xE5 legge til. Shortlisten er lagret mellom sesjoner."));
+    return /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 10
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: FONT.xs,
+        color: C.text2
+      }
+    }, shortlist.length, " spillere shortlistet"), /*#__PURE__*/React.createElement("button", {
+      onClick: () => {
+        setShortlist([]);
+        saveShortlist([]);
+      },
+      style: {
+        background: 'transparent',
+        border: `1px solid ${C.border}`,
+        borderRadius: 5,
+        padding: '3px 8px',
+        cursor: 'pointer',
+        fontSize: FONT.xs,
+        color: C.text2,
+        fontFamily: 'inherit'
+      }
+    }, "T\xF8m shortlist")), /*#__PURE__*/React.createElement("div", {
+      style: {
+        overflowX: 'auto'
+      }
+    }, /*#__PURE__*/React.createElement("table", {
+      style: {
+        width: '100%',
+        borderCollapse: 'collapse',
+        minWidth: 380
+      }
+    }, /*#__PURE__*/React.createElement("thead", null, /*#__PURE__*/React.createElement("tr", {
+      style: {
+        borderBottom: `1.5px solid ${C.border}`,
+        background: C.bg3
+      }
+    }, ['Spiller', 'Lag', 'Posisjon', 'Kamp', 'Dato', 'Krav'].map(h => /*#__PURE__*/React.createElement("th", {
+      key: h,
+      style: {
+        padding: '6px 10px',
+        textAlign: 'left',
+        fontSize: FONT.xs,
+        letterSpacing: '.08em',
+        textTransform: 'uppercase',
+        color: C.text2
+      }
+    }, h)))), /*#__PURE__*/React.createElement("tbody", null, shortlist.map((s, i) => {
+      const kpis = allKpisAll(s.pos);
+      let pass = 0,
+        total = 0;
+      kpis.forEach(k => {
+        const sv = evalKpiP90(s, k);
+        if (sv !== 'na') {
+          total++;
+          if (sv === 'pass') pass++;
+        }
+      });
+      const pct = total ? Math.round(pass / total * 100) : 0;
+      const col = pct >= 70 ? C.green : pct >= 50 ? C.amber : C.red;
+      return /*#__PURE__*/React.createElement("tr", {
+        key: s.key || i,
+        style: {
+          borderBottom: `1px solid ${C.border}`,
+          background: C.bg2
+        }
+      }, /*#__PURE__*/React.createElement("td", {
+        style: {
+          padding: '7px 10px',
+          fontWeight: 600,
+          fontSize: FONT.body,
+          color: C.text
+        }
+      }, s.name), /*#__PURE__*/React.createElement("td", {
+        style: {
+          padding: '7px 10px',
+          fontSize: FONT.small,
+          color: C.text2
+        }
+      }, s.team || '—'), /*#__PURE__*/React.createElement("td", {
+        style: {
+          padding: '7px 10px',
+          fontSize: FONT.small,
+          color: NFF_ROLES[s.pos]?.color || C.blue,
+          fontWeight: 600
+        }
+      }, NFF_ROLES[s.pos]?.label || s.pos), /*#__PURE__*/React.createElement("td", {
+        style: {
+          padding: '7px 10px',
+          fontSize: FONT.small,
+          color: C.text2
+        }
+      }, s.match?.slice(0, 20) || '—'), /*#__PURE__*/React.createElement("td", {
+        style: {
+          padding: '7px 10px',
+          fontSize: FONT.xs,
+          color: C.text2,
+          fontFamily: FONT.mono
+        }
+      }, s.date || '—'), /*#__PURE__*/React.createElement("td", {
+        style: {
+          padding: '7px 10px'
+        }
+      }, /*#__PURE__*/React.createElement("span", {
+        style: {
+          fontWeight: 700,
+          color: col,
+          fontFamily: FONT.mono,
+          fontSize: FONT.small
+        }
+      }, pass, "/", total), /*#__PURE__*/React.createElement("span", {
+        style: {
+          fontSize: 9,
+          color: col,
+          marginLeft: 4
+        }
+      }, "(", pct, "%)")));
+    })))), /*#__PURE__*/React.createElement("div", {
+      style: {
+        marginTop: 8
+      }
+    }, /*#__PURE__*/React.createElement("button", {
+      onClick: () => downloadCSVNFF([{
+        players: shortlist,
+        filename: 'Shortlist',
+        date: new Date().toISOString().slice(0, 10),
+        source: 'shortlist'
+      }]),
+      style: {
+        background: C.blue + '18',
+        border: `1px solid ${C.blue}44`,
+        borderRadius: 6,
+        padding: '5px 12px',
+        cursor: 'pointer',
+        fontSize: FONT.xs,
+        fontWeight: 700,
+        color: C.blue,
+        fontFamily: 'inherit'
+      }
+    }, "↓ Eksporter shortlist til CSV")));
+  }
   return /*#__PURE__*/React.createElement("div", null, sel && /*#__PURE__*/React.createElement(PlayerModal, {
     player: sel,
     match: m,
-    onClose: () => setSel(null)
-  }), cmpA && !showCmp && /*#__PURE__*/React.createElement("div", {
+    onClose: () => setSel(null),
+    allMatches: allMatches
+  }), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      gap: 6,
+      marginBottom: 10,
+      flexWrap: 'wrap',
+      alignItems: 'center'
+    }
+  }, [['cards', 'Kort'], ['ranking', 'Rangering'], ['shortlist', `★ Shortlist${shortlist.length ? ` (${shortlist.length})` : ''}`]].map(([vId, vLbl]) => /*#__PURE__*/React.createElement("button", {
+    key: vId,
+    onClick: () => setViewMode(vId),
+    style: {
+      background: viewMode === vId ? C.blue : 'transparent',
+      border: `1px solid ${viewMode === vId ? C.blue : C.border}`,
+      borderRadius: 20,
+      padding: '4px 14px',
+      cursor: 'pointer',
+      color: viewMode === vId ? '#fff' : C.text2,
+      fontSize: FONT.xs,
+      fontWeight: 700,
+      fontFamily: 'inherit'
+    }
+  }, vLbl)), /*#__PURE__*/React.createElement("input", {
+    type: "text",
+    value: search,
+    onChange: e => setSearch(e.target.value),
+    placeholder: "S\xF8k spiller…",
+    style: {
+      marginLeft: 'auto',
+      background: C.bg2,
+      border: `1px solid ${C.border}`,
+      borderRadius: 5,
+      padding: '4px 10px',
+      fontSize: FONT.small,
+      color: C.text,
+      outline: 'none',
+      minWidth: 140
+    }
+  })), cmpA && !showCmp && /*#__PURE__*/React.createElement("div", {
     style: {
       background: C.blue + '10',
       border: `1px solid ${C.blue}`,
@@ -5802,7 +6224,7 @@ function App() {
     let alive = true;
     idbGet('matches').then(saved => {
       if (alive && saved && Array.isArray(saved) && saved.length) {
-        setMatches(saved);
+        setMatches(saved.map(normalizeMatch));
         setStorageMsg("Lastet " + saved.length + " lagrede kamper");
         setTimeout(() => alive && setStorageMsg(""), 3000);
       }
@@ -5811,7 +6233,7 @@ function App() {
     return () => { alive = false; };
   }, []);
   React.useEffect(() => {
-    if (!loaded) return;
+    if (!loaded || matches === DEMOS) return;
     idbSet('matches', matches);
   }, [matches, loaded]);
   React.useEffect(() => {
@@ -5826,7 +6248,9 @@ function App() {
   const [err, setErr] = useState(null);
   const fRef = useRef();
   const wsRef = useRef();
-  const m = matches[sel];
+  // Clamp: a stale session index (e.g. after import/reset) must not crash the app
+  const selSafe = Math.min(Math.max(sel, 0), matches.length - 1);
+  const m = matches[selSafe];
   const handleFiles = useCallback(async files => {
     setLoading(true);
     setErr(null);
@@ -5850,7 +6274,7 @@ function App() {
     setLoading(false);
     setLoadMsg('');
   }, []);
-  const updField = (id, val) => setMatches(p => p.map((mx, i) => i === sel ? {
+  const updField = (id, val) => setMatches(p => p.map((mx, i) => i === selSafe ? {
     ...mx,
     [id]: val
   } : mx));
@@ -5885,7 +6309,6 @@ function App() {
     style: {
       position: 'fixed',
       inset: 0,
-      zIndex: 200,
       background: '#0d111799',
       border: `2px dashed ${C.blue}`,
       display: 'flex',
@@ -5921,7 +6344,7 @@ function App() {
     }
   }, "Kampanalyse \xB7 NFF Rollekrav"), /*#__PURE__*/React.createElement("div", {
     className: "match-title"
-  }, m.homeTeam, " vs ", m.awayTeam), /*#__PURE__*/React.createElement("div", {
+  }, m.homeTeam || m.stabTeam, " vs ", m.awayTeam || m.oppTeam), /*#__PURE__*/React.createElement("div", {
     className: "match-meta"
   }, /*#__PURE__*/React.createElement("span", {
     className: "score",
@@ -5984,7 +6407,7 @@ function App() {
       ...nffBtnStyle(C.green)
     }
   }, "\u2193 CSV"), /*#__PURE__*/React.createElement("button", {
-    onClick: () => printMatchReport(matches[sel] || matches[0]),
+    onClick: () => printMatchReport(m),
     title: "Kamprapport PDF",
     style: {
       ...nffBtnStyle(C.purple)
@@ -5997,7 +6420,18 @@ function App() {
     onClick: () => wsRef.current && wsRef.current.click(),
     title: "Last inn arbeidsomr\xe5de fra JSON-fil",
     style: { ...nffBtnStyle(C.blue) }
-  }, "\u{1F4C2} \xc5pne")), /*#__PURE__*/React.createElement("input", {
+  }, "\u{1F4C2} \xc5pne"), /*#__PURE__*/React.createElement("button", {
+    onClick: async () => {
+      if (!window.confirm("Nullstill til demodata? Dette sletter alle lagrede kamper. Eksporter f\xf8rst hvis du vil beholde dem.")) return;
+      await idbDel('matches');
+      setMatches(DEMOS);
+      setSel(0);
+      setStorageMsg("Tilbakestilt til demodata");
+      setTimeout(() => setStorageMsg(""), 3000);
+    },
+    title: "Slett alle lagrede kamper og g\xe5 tilbake til demodata",
+    style: { ...nffBtnStyle(C.red) }
+  }, "\u{1F5D1} Nullstill")), /*#__PURE__*/React.createElement("input", {
     ref: wsRef,
     type: "file",
     accept: ".json",
@@ -6007,7 +6441,7 @@ function App() {
       if (!f) return;
       try {
         const imported = await importWorkspace(f);
-        setMatches(imported);
+        setMatches(imported.map(normalizeMatch));
         setSel(0);
         setStorageMsg("Lastet inn " + imported.length + " kamper fra fil");
         setTimeout(() => setStorageMsg(""), 3000);
@@ -6079,18 +6513,18 @@ function App() {
     key: mx.id,
     onClick: () => setSel(i),
     style: {
-      background: sel === i ? C.blue + '18' : 'transparent',
-      border: `1px solid ${sel === i ? C.blue : C.border}`,
+      background: selSafe === i ? C.blue + '18' : 'transparent',
+      border: `1px solid ${selSafe === i ? C.blue : C.border}`,
       borderRadius: 4,
       padding: '2px 10px',
       cursor: 'pointer',
-      color: sel === i ? C.blue : C.text3,
+      color: selSafe === i ? C.blue : C.text3,
       fontSize: 10,
       fontWeight: 600,
       fontFamily: 'inherit',
       whiteSpace: 'nowrap'
     }
-  }, mx.stabTeam, " vs ", mx.oppTeam.slice(0, 12)))), /*#__PURE__*/React.createElement("div", {
+  }, mx.homeTeam || mx.stabTeam || '?', " vs ", (mx.awayTeam || mx.oppTeam || '').slice(0, 12)))), /*#__PURE__*/React.createElement("div", {
     className: "tabs"
   }, [['team', 'Team KPIer'], ['players', 'Spillere'], ['history', 'Historikk']].map(([id, lbl]) => /*#__PURE__*/React.createElement("button", {
     key: id,
@@ -6113,27 +6547,7 @@ function App() {
       alignItems: "center",
       gap: 8
     }
-  }, /*#__PURE__*/React.createElement("span", null, "\u2713 ", storageMsg), /*#__PURE__*/React.createElement("button", {
-    onClick: async () => {
-      if (!window.confirm("Nullstill til demodata? Dette sletter alle lagrede kamper. Eksporter f\xf8rst hvis du vil beholde dem.")) return;
-      await idbDel('matches');
-      setMatches(DEMOS);
-      setSel(0);
-      setStorageMsg("Tilbakestilt til demodata");
-      setTimeout(() => setStorageMsg(""), 3000);
-    },
-    style: {
-      background: "transparent",
-      border: `1px solid ${C.red}55`,
-      borderRadius: 5,
-      padding: "2px 8px",
-      cursor: "pointer",
-      fontSize: 11,
-      color: C.red,
-      fontFamily: "inherit",
-      fontWeight: 700
-    }
-  }, "\u{1F5D1} Nullstill")), tab === 'team' && /*#__PURE__*/React.createElement(TeamKPIView, {
+  }, /*#__PURE__*/React.createElement("span", null, "\u2713 ", storageMsg)), tab === 'team' && /*#__PURE__*/React.createElement(TeamKPIView, {
     m: m,
     onUpdate: updField
   }), tab === 'players' && /*#__PURE__*/React.createElement(PlayerView, {
@@ -6141,7 +6555,7 @@ function App() {
     allMatches: matches
   }), tab === 'history' && /*#__PURE__*/React.createElement(HistoryView, {
     matches: matches,
-    sel: sel,
+    sel: selSafe,
     onSel: i => {
       setSel(i);
       setTab('team');
@@ -6182,341 +6596,6 @@ try {
 } catch (err) {
   document.getElementById('root').innerHTML = '<div style="padding:20px;color:#f85149;font-family:monospace;font-size:12px;background:#0d1117;min-height:100vh"><b>Feil ved oppstart:</b><br/>' + err.message + '<br/><br/>' + err.stack + '</div>';
 }
-/* ── Player Ranking ───────────────────────────────────── */
-function PlayerRankingNFF() {
-  const allFiltered = m.players.filter(p => {
-    if (search && !p.name.toLowerCase().includes(search.toLowerCase())) return false;
-    return true;
-  });
-  const ranked = [...allFiltered].map(p => {
-    const pos = posOv[p.name] || p.pos;
-    const {
-      pass,
-      total,
-      pct
-    } = scoreAllKpis(p, pos);
-    const teamColor = p.team === homeTeam ? C.blue : C.amber;
-    return {
-      ...p,
-      pos,
-      pass,
-      total,
-      pct,
-      teamColor
-    };
-  }).sort((a, b) => b.pct - a.pct || b.pass - a.pass);
-  return /*#__PURE__*/React.createElement("div", {
-    style: {
-      overflowX: 'auto'
-    }
-  }, /*#__PURE__*/React.createElement("table", {
-    style: {
-      width: '100%',
-      borderCollapse: 'collapse',
-      minWidth: 420
-    }
-  }, /*#__PURE__*/React.createElement("thead", null, /*#__PURE__*/React.createElement("tr", {
-    style: {
-      borderBottom: `1.5px solid ${C.border}`,
-      background: C.bg3
-    }
-  }, ['#', 'Spiller', 'Posisjon', 'Min.', 'Krav', 'Score'].map(h => /*#__PURE__*/React.createElement("th", {
-    key: h,
-    style: {
-      padding: '7px 10px',
-      textAlign: h === '#' || h === 'Score' ? 'center' : 'left',
-      fontSize: FONT.xs,
-      letterSpacing: '.08em',
-      textTransform: 'uppercase',
-      color: C.text2,
-      whiteSpace: 'nowrap'
-    }
-  }, h)))), /*#__PURE__*/React.createElement("tbody", null, ranked.map((p, i) => {
-    const col = p.pct >= 70 ? C.green : p.pct >= 50 ? C.amber : C.red;
-    return /*#__PURE__*/React.createElement("tr", {
-      key: p.name + p.team,
-      onClick: () => setSel(p),
-      style: {
-        borderBottom: `1px solid ${C.border}`,
-        cursor: 'pointer',
-        background: i === 0 ? C.green + '06' : C.bg2
-      }
-    }, /*#__PURE__*/React.createElement("td", {
-      style: {
-        padding: '8px 10px',
-        textAlign: 'center',
-        fontSize: FONT.small,
-        fontWeight: 700,
-        color: i === 0 ? C.green : C.text2,
-        fontFamily: FONT.mono
-      }
-    }, i + 1), /*#__PURE__*/React.createElement("td", {
-      style: {
-        padding: '8px 10px'
-      }
-    }, /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontSize: FONT.body,
-        fontWeight: 600,
-        color: C.text
-      }
-    }, p.name), /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontSize: FONT.xs,
-        display: 'flex',
-        gap: 5,
-        alignItems: 'center',
-        marginTop: 1
-      }
-    }, /*#__PURE__*/React.createElement("span", {
-      style: {
-        color: p.teamColor,
-        fontWeight: 700
-      }
-    }, p.team || '?'), p.isStarter === false && /*#__PURE__*/React.createElement("span", {
-      style: {
-        color: C.amber
-      }
-    }, "Innbytter"))), /*#__PURE__*/React.createElement("td", {
-      style: {
-        padding: '8px 10px'
-      }
-    }, /*#__PURE__*/React.createElement("span", {
-      style: {
-        fontSize: FONT.xs,
-        color: NFF_ROLES[p.pos]?.color || C.blue,
-        fontWeight: 700
-      }
-    }, NFF_ROLES[p.pos]?.label || p.pos)), /*#__PURE__*/React.createElement("td", {
-      style: {
-        padding: '8px 10px',
-        fontSize: FONT.small,
-        color: C.text2,
-        fontFamily: FONT.mono
-      }
-    }, p.minutes_played || 90, "'"), /*#__PURE__*/React.createElement("td", {
-      style: {
-        padding: '8px 10px'
-      }
-    }, /*#__PURE__*/React.createElement("span", {
-      style: {
-        fontWeight: 700,
-        color: col,
-        fontFamily: FONT.mono
-      }
-    }, p.pass, "/", p.total)), /*#__PURE__*/React.createElement("td", {
-      style: {
-        padding: '8px 10px',
-        textAlign: 'center'
-      }
-    }, /*#__PURE__*/React.createElement("div", {
-      style: {
-        display: 'flex',
-        gap: 5,
-        alignItems: 'center',
-        justifyContent: 'center'
-      }
-    }, /*#__PURE__*/React.createElement("div", {
-      style: {
-        width: 55,
-        height: 4,
-        background: C.border,
-        borderRadius: 3,
-        overflow: 'hidden'
-      }
-    }, /*#__PURE__*/React.createElement("div", {
-      style: {
-        height: '100%',
-        width: `${p.pct}%`,
-        background: col,
-        borderRadius: 3
-      }
-    })), /*#__PURE__*/React.createElement("span", {
-      style: {
-        fontSize: FONT.xs,
-        fontWeight: 700,
-        color: col,
-        minWidth: 28,
-        fontFamily: FONT.mono
-      }
-    }, p.pct, "%"))));
-  }))));
-}
-
-/* ── Shortlist View ───────────────────────────────────── */
-function ShortlistView() {
-  if (!shortlist.length) return /*#__PURE__*/React.createElement("div", {
-    style: {
-      textAlign: 'center',
-      padding: '32px 0',
-      color: C.text2
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontSize: 32,
-      marginBottom: 12
-    }
-  }, "\u2605"), /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontSize: FONT.body,
-      fontWeight: 700,
-      color: C.text,
-      marginBottom: 6
-    }
-  }, "Ingen spillere shortlistet"), /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontSize: FONT.small,
-      lineHeight: 1.6
-    }
-  }, "Klikk \xAB\u2606 Shortlist\xBB p\xE5 et spillerkort for \xE5 legge til. Shortlisten er lagret mellom sesjoner."));
-  return /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: 'flex',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      marginBottom: 10
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontSize: FONT.xs,
-      color: C.text2
-    }
-  }, shortlist.length, " spillere shortlistet"), /*#__PURE__*/React.createElement("button", {
-    onClick: () => {
-      setShortlist([]);
-      saveShortlist([]);
-    },
-    style: {
-      background: 'transparent',
-      border: `1px solid ${C.border}`,
-      borderRadius: 5,
-      padding: '3px 8px',
-      cursor: 'pointer',
-      fontSize: FONT.xs,
-      color: C.text2,
-      fontFamily: 'inherit'
-    }
-  }, "T\xF8m shortlist")), /*#__PURE__*/React.createElement("div", {
-    style: {
-      overflowX: 'auto'
-    }
-  }, /*#__PURE__*/React.createElement("table", {
-    style: {
-      width: '100%',
-      borderCollapse: 'collapse',
-      minWidth: 380
-    }
-  }, /*#__PURE__*/React.createElement("thead", null, /*#__PURE__*/React.createElement("tr", {
-    style: {
-      borderBottom: `1.5px solid ${C.border}`,
-      background: C.bg3
-    }
-  }, ['Spiller', 'Lag', 'Posisjon', 'Kamp', 'Dato', 'Krav'].map(h => /*#__PURE__*/React.createElement("th", {
-    key: h,
-    style: {
-      padding: '6px 10px',
-      textAlign: 'left',
-      fontSize: FONT.xs,
-      letterSpacing: '.08em',
-      textTransform: 'uppercase',
-      color: C.text2
-    }
-  }, h)))), /*#__PURE__*/React.createElement("tbody", null, shortlist.map((s, i) => {
-    const kpis = allKpisAll(s.pos);
-    let pass = 0,
-      total = 0;
-    kpis.forEach(k => {
-      const sv = evalKpiP90(s, k);
-      if (sv !== 'na') {
-        total++;
-        if (sv === 'pass') pass++;
-      }
-    });
-    const pct = total ? Math.round(pass / total * 100) : 0;
-    const col = pct >= 70 ? C.green : pct >= 50 ? C.amber : C.red;
-    return /*#__PURE__*/React.createElement("tr", {
-      key: i,
-      style: {
-        borderBottom: `1px solid ${C.border}`,
-        background: C.bg2
-      }
-    }, /*#__PURE__*/React.createElement("td", {
-      style: {
-        padding: '7px 10px',
-        fontWeight: 600,
-        fontSize: FONT.body,
-        color: C.text
-      }
-    }, s.name), /*#__PURE__*/React.createElement("td", {
-      style: {
-        padding: '7px 10px',
-        fontSize: FONT.small,
-        color: C.text2
-      }
-    }, s.team || '—'), /*#__PURE__*/React.createElement("td", {
-      style: {
-        padding: '7px 10px',
-        fontSize: FONT.small,
-        color: NFF_ROLES[s.pos]?.color || C.blue,
-        fontWeight: 600
-      }
-    }, NFF_ROLES[s.pos]?.label || s.pos), /*#__PURE__*/React.createElement("td", {
-      style: {
-        padding: '7px 10px',
-        fontSize: FONT.small,
-        color: C.text2
-      }
-    }, s.match?.slice(0, 20) || '—'), /*#__PURE__*/React.createElement("td", {
-      style: {
-        padding: '7px 10px',
-        fontSize: FONT.xs,
-        color: C.text2,
-        fontFamily: FONT.mono
-      }
-    }, s.date || '—'), /*#__PURE__*/React.createElement("td", {
-      style: {
-        padding: '7px 10px'
-      }
-    }, /*#__PURE__*/React.createElement("span", {
-      style: {
-        fontWeight: 700,
-        color: col,
-        fontFamily: FONT.mono,
-        fontSize: FONT.small
-      }
-    }, pass, "/", total), /*#__PURE__*/React.createElement("span", {
-      style: {
-        fontSize: 9,
-        color: col,
-        marginLeft: 4
-      }
-    }, "(", pct, "%)")));
-  })))), /*#__PURE__*/React.createElement("div", {
-    style: {
-      marginTop: 8
-    }
-  }, /*#__PURE__*/React.createElement("button", {
-    onClick: () => downloadCSVNFF([{
-      players: shortlist,
-      filename: 'Shortlist',
-      date: new Date().toISOString().slice(0, 10),
-      source: 'shortlist'
-    }]),
-    style: {
-      background: C.blue + '18',
-      border: `1px solid ${C.blue}44`,
-      borderRadius: 6,
-      padding: '5px 12px',
-      cursor: 'pointer',
-      fontSize: FONT.xs,
-      fontWeight: 700,
-      color: C.blue,
-      fontFamily: 'inherit'
-    }
-  }, "\u2193 Eksporter shortlist til CSV")));
-}
-
-
 </script>
 </body>
 </html>
